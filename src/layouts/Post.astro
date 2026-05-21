@@ -1,0 +1,29 @@
+---
+import Base from './Base.astro';
+
+interface Props {
+  title: string;
+  pubDate: Date;
+  description?: string;
+  category?: string;
+}
+
+const { title, pubDate, description, category } = Astro.props;
+
+const dateStr = pubDate.toLocaleDateString('ko-KR', {
+  year: 'numeric', month: 'long', day: 'numeric'
+});
+---
+<Base title={title} description={description}>
+  <a href="/" class="back-link">← 목록으로</a>
+  <article class="prose">
+    <header class="prose-header">
+      <h1>{title}</h1>
+      <div class="prose-meta">
+        <time datetime={pubDate.toISOString()}>{dateStr}</time>
+        {category && <span class="post-category">{category}</span>}
+      </div>
+    </header>
+    <slot />
+  </article>
+</Base>

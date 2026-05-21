@@ -1,0 +1,35 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const { title = 'Strollpress', description = '제주 서귀포 기반 창작·아카이브' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content={description} />
+  <title>{title === 'Strollpress' ? title : `${title} — Strollpress`}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <!-- Open Graph -->
+  <meta property="og:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+</head>
+<body>
+  <header class="site-header">
+    <a href="/" class="site-name">Strollpress</a>
+    <span class="site-tagline">비데이터의 데이터화 / 기맥락의 재맥락화</span>
+  </header>
+  <main>
+    <slot />
+  </main>
+  <footer>
+    &copy; {new Date().getFullYear()} Strollpress · 제주 서귀포
+  </footer>
+</body>
+</html>
