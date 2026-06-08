@@ -1,24 +1,1143 @@
-<!DOCTYPE html>
+<!DOCTYPE html><script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Hareecho Mv Schedule",
+  "schemaVersion": 1,
+  "description": "하례초등학교 〈생태지킴이 뮤직비디오〉 촬영 스케줄 대시보드 v2. Option A(1일 집중)/Option B(2일 분산) 간트 타임라인, PART A 가사 기반 6씬 + PART B 프로그램 기반 4씬, 액션 아이템(10개) 체크리스트, 마일스톤 포함."
+}
+</script>
 <html lang="ko">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hareecho MV Schedule</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>하례초 MV 촬영 스케줄 v2</title>
 <style>
-  body { margin:0; height:100vh; display:flex; flex-direction:column; align-items:center;
-         justify-content:center; font-family:-apple-system,sans-serif; background:#0d0d1a; color:#888; gap:12px; }
-  .icon { font-size:48px; }
-  .name { font-size:18px; color:#e0e0f0; }
-  .desc { font-size:13px; max-width:400px; text-align:center; line-height:1.6; }
-  .badge { font-size:11px; font-family:monospace; background:#1a1a2e; padding:4px 12px;
-            border-radius:4px; border:1px solid #2a2a4a; color:#6677cc; }
-  .hint { font-size:12px; color:#444; margin-top:8px; }
+  :root {
+    color-scheme: light;
+    --dark: #1A2E1A;
+    --eco: #3B6D11;
+    --mint: #1D9E75;
+    --yellow: #FAC775;
+    --coral: #F0997B;
+    --bg: #F5F7F4;
+    --card: #FFFFFF;
+    --border: #E0E8DC;
+    --text: #1A2E1A;
+    --muted: #6B7F6B;
+
+    /* Scene colors — PART A */
+    --s01: #E8845A;   /* 고살리숲 새소리 */
+    --s02: #F0997B;   /* 등교길 */
+    --s03: #3B6D11;   /* 텃밭 */
+    --s04: #1D9E75;   /* 교내 자전거 */
+    --s05: #E8A020;   /* 감귤+점빵 */
+    --s06: #4A90C4;   /* 망장포·쇠소깍 */
+    /* Scene colors — PART B */
+    --p01: #9B59B6;   /* 효돈천 인터뷰 */
+    --p02: #6C9E3A;   /* 걸서악·하례습지 생태탐험 */
+    --p03: #5B8DD9;   /* 음악 제작 */
+    --p04: #7AADCC;   /* 독서 토론 */
+    /* Utility */
+    --setup: #AAB8A6;
+    --lunch: #D4C5A9;
+    --outro: #7B5EA7;
+    --drone: #C47AB5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--dark);
+    color: white;
+    padding: 18px 24px 14px;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .badge {
+    background: var(--mint);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+  .badge.yellow { background: var(--yellow); color: var(--dark); }
+  .badge.v2 { background: #7B5EA7; }
+  .header h1 {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+  }
+  .header-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header-meta span::before { content: '· '; }
+  .header-meta span:first-child::before { content: ''; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    background: white;
+    border-bottom: 2px solid var(--border);
+    padding: 0 20px;
+    gap: 4px;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 16px 8px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .tab.active { color: var(--eco); border-bottom-color: var(--eco); }
+  .tab:hover:not(.active) { color: var(--dark); }
+
+  /* CONTENT */
+  .content { padding: 20px; max-width: 960px; margin: 0 auto; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* OPTION BANNER */
+  .option-banner {
+    background: linear-gradient(135deg, var(--eco) 0%, var(--mint) 100%);
+    color: white;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .option-banner.b { background: linear-gradient(135deg, #5B4E8A 0%, var(--p01) 100%); }
+  .option-banner .rec { font-size: 10px; background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 20px; font-weight: 700; }
+  .option-banner strong { font-size: 14px; }
+  .option-banner p { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+
+  /* GANTT */
+  .gantt-wrap {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .gantt-head {
+    background: var(--dark);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 10px 16px;
+    letter-spacing: 0.3px;
+  }
+  .gantt-body { padding: 16px; overflow-x: auto; }
+  .gantt-ruler {
+    display: flex;
+    margin-bottom: 8px;
+    padding-left: 130px;
+  }
+  .gantt-ruler span {
+    font-size: 10px;
+    color: var(--muted);
+    flex: 1;
+    min-width: 30px;
+    text-align: left;
+  }
+  .gantt-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    gap: 10px;
+  }
+  .gantt-label {
+    width: 120px;
+    min-width: 120px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+    padding-right: 8px;
+    line-height: 1.3;
+  }
+  .gantt-track {
+    flex: 1;
+    height: 26px;
+    background: var(--bg);
+    border-radius: 4px;
+    position: relative;
+    overflow: visible;
+    min-width: 420px;
+  }
+  .gantt-bar {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding: 0 7px;
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: default;
+    transition: opacity 0.15s;
+  }
+  .gantt-bar:hover { opacity: 0.85; }
+  .gantt-bar.dark-text { color: var(--dark); }
+  .gantt-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 8px 0 4px 0;
+    padding-left: 130px;
+  }
+
+  /* SCENE CARDS */
+  .scene-section-head {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 20px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .scene-section-head::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  .scene-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .scene-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+  }
+  .scene-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .scene-card-head {
+    padding: 10px 14px;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .scene-card-head .time { opacity: 0.85; font-weight: 400; }
+  .scene-card-body { padding: 12px 14px; }
+  .scene-card-body h3 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .scene-card-body .lyrics {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    border-left: 2px solid var(--border);
+    padding-left: 8px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .scene-card-body .program-desc {
+    font-size: 11px;
+    color: var(--muted);
+    border-left: 2px solid var(--border);
+    padding-left: 8px;
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  .scene-card-body .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    font-size: 10px;
+  }
+  .chip {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .chip.key { background: #FFF3CD; border-color: #FAC775; color: #7A5000; font-weight: 700; }
+  .chip.ai { background: #F0E8FF; border-color: #B590EE; color: #6B3DAA; font-weight: 700; }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 20px 0 10px;
+  }
+
+  /* TABLE */
+  .sched-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .sched-table th {
+    background: var(--dark);
+    color: white;
+    padding: 9px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .sched-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .sched-table tr:last-child td { border-bottom: none; }
+  .sched-table tr:hover td { background: var(--bg); }
+  .sched-table tr.part-b-row td { background: #F8F4FF; }
+  .sched-table tr.part-b-row:hover td { background: #F0EAFF; }
+  .scene-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+  .time-cell { font-weight: 700; color: var(--eco); white-space: nowrap; }
+  .note-cell { color: var(--muted); font-size: 11px; }
+  .star { color: #E8A020; font-weight: 700; }
+  .drone-note { color: var(--drone); font-weight: 700; }
+
+  /* LOCATION TABLE */
+  .location-table { margin-top: 20px; }
+
+  /* ACTION ITEMS */
+  .action-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .action-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    transition: box-shadow 0.12s;
+  }
+  .action-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .action-item.done { opacity: 0.5; }
+  .action-item.done .action-text { text-decoration: line-through; color: var(--muted); }
+  .action-checkbox {
+    width: 18px; height: 18px;
+    min-width: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .action-item.done .action-checkbox {
+    background: var(--mint);
+    border-color: var(--mint);
+  }
+  .action-item.done .action-checkbox::after {
+    content: '✓';
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .action-content { flex: 1; }
+  .action-text { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .action-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .action-tag {
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .action-tag.p1 { background: #FFE5E5; color: #C0392B; }
+  .action-tag.p2 { background: #E8F4FD; color: #2980B9; }
+  .action-tag.owner { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+  .action-tag.deadline { background: #FFF8E1; color: #7A5000; border: 1px solid #FAC775; }
+  .action-count { font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+  .action-count strong { color: var(--eco); }
+
+  /* MILESTONES */
+  .timeline {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 42px;
+    top: 20px;
+    bottom: 20px;
+    width: 2px;
+    background: var(--border);
+  }
+  .milestone {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .milestone:last-child { margin-bottom: 0; }
+  .ms-dot {
+    width: 28px; height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .ms-dot.done { background: var(--mint); border-color: var(--mint); color: white; }
+  .ms-dot.today { background: var(--eco); border-color: var(--eco); color: white; }
+  .ms-dot.soon { background: var(--yellow); border-color: #E0A800; }
+  .ms-dot.deadline { background: var(--coral); border-color: #E07060; color: white; }
+  .ms-body { flex: 1; padding-top: 4px; }
+  .ms-date { font-size: 11px; color: var(--muted); margin-bottom: 2px; font-weight: 600; }
+  .ms-title { font-size: 13px; font-weight: 700; }
+  .ms-pill {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+    font-weight: 700;
+  }
+  .ms-pill.done { background: #E0F5EE; color: #1D9E75; }
+  .ms-pill.pending { background: #F0F4FF; color: #6B7FC4; }
+  .ms-pill.deadline { background: #FFE8E5; color: #C0392B; }
+
+  /* INFO BOX */
+  .info-box {
+    background: #FFF8E1;
+    border: 1px solid #FAC775;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #7A5000;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .info-box .icon { font-size: 16px; }
+  .drone-box {
+    background: #F9F0FF;
+    border: 1px solid #C47AB5;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #6B3DAA;
+    margin-top: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* LEGEND */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .legend-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-right: 4px;
+  }
+  .legend-sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
 </style>
 </head>
 <body>
-  <div class="icon">🎬</div>
-  <div class="name">Hareecho MV Schedule</div>
-  <div class="desc">하례초등학교 생태학교 MV — 마스터 기획 문서</div>
-  <div class="badge">hareecho-mv-schedule</div>
-  <div class="hint">아티팩트를 업로드하면 여기에 표시됩니다</div>
+
+<div class="header">
+  <div class="header-top">
+    <span class="badge">🌿 하례초 MV</span>
+    <span class="badge yellow">촬영 D-10</span>
+    <span class="badge v2">씬 구조 v2</span>
+  </div>
+  <h1>생태지킴이, 우리의 이야기 — 뮤직비디오 제작 스케줄</h1>
+  <div class="header-meta">
+    <span>예산 200만원 (VAT 별도)</span>
+    <span>납품 마감 2026.06.20</span>
+    <span>촬영 예정 05.28 (수)</span>
+    <span>가사 기반 6씬 + 프로그램 기반 4씬 = 총 10씬</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab(event,'opt-a')">📅 Option A — 1일 집중</button>
+  <button class="tab" onclick="switchTab(event,'opt-b')">📅 Option B — 2일 분산</button>
+  <button class="tab" onclick="switchTab(event,'scenes')">🎬 씬 구성 (10개)</button>
+  <button class="tab" onclick="switchTab(event,'actions')">✅ 액션 아이템</button>
+  <button class="tab" onclick="switchTab(event,'milestones')">🗓 마일스톤</button>
+</div>
+
+<div class="content">
+
+  <!-- ── OPTION A ── -->
+  <div class="panel active" id="panel-opt-a">
+    <div class="option-banner">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+          <strong>Option A — 1일 집중 촬영 (권장)</strong>
+          <span class="rec">RECOMMENDED</span>
+        </div>
+        <p>2026.05.28 (수) · 예비일 05.29 (목) · 07:20 집결 → 16:30 철수</p>
+      </div>
+    </div>
+
+    <div class="legend" id="legend-a"></div>
+
+    <div class="gantt-wrap">
+      <div class="gantt-head">타임라인 — 2026.05.28</div>
+      <div class="gantt-body">
+        <div class="gantt-ruler" id="ruler-a"></div>
+        <div id="gantt-a"></div>
+      </div>
+    </div>
+
+    <div class="section-title">상세 스케줄</div>
+    <table class="sched-table">
+      <thead>
+        <tr>
+          <th>시간</th>
+          <th>장소</th>
+          <th>장면</th>
+          <th>인원</th>
+          <th>비고</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="time-cell">07:20</td>
+          <td>학교 주차장</td>
+          <td><span class="scene-dot" style="background:var(--setup)"></span>집결 · 장비 셋업</td>
+          <td>스태프</td>
+          <td class="note-cell">—</td>
+        </tr>
+        <tr>
+          <td class="time-cell">07:30–08:00</td>
+          <td>고살리숲</td>
+          <td><span class="scene-dot" style="background:var(--s01)"></span>S01 — 새소리 오프닝</td>
+          <td>학생 3명</td>
+          <td class="note-cell">🎵 자연음 필수 · 골든아워</td>
+        </tr>
+        <tr>
+          <td class="time-cell">08:00–08:30</td>
+          <td>등교길 (마을 골목)</td>
+          <td><span class="scene-dot" style="background:var(--s02)"></span>S02 — 등교길</td>
+          <td>학생 4명</td>
+          <td class="note-cell">⚡ 골든아워 역광 필수</td>
+        </tr>
+        <tr>
+          <td class="time-cell">08:30–09:20</td>
+          <td>하례초 텃밭</td>
+          <td><span class="scene-dot" style="background:var(--s03)"></span>S03 — 텃밭</td>
+          <td>학생 6명 + 담임</td>
+          <td class="note-cell">수업 전 활용</td>
+        </tr>
+        <tr>
+          <td class="time-cell">09:30–10:30</td>
+          <td>하례초 교내</td>
+          <td><span class="scene-dot" style="background:var(--s04)"></span>S04 — 교내 자전거</td>
+          <td>학생 3명</td>
+          <td class="note-cell">교내 허가 간소</td>
+        </tr>
+        <tr class="part-b-row">
+          <td class="time-cell">10:30–11:00</td>
+          <td>하례초 교실</td>
+          <td><span class="scene-dot" style="background:var(--p03)"></span>P03 음악 제작 <span class="scene-dot" style="background:var(--p04)"></span>P04 독서 토론</td>
+          <td>학생 전원</td>
+          <td class="note-cell">인서트 컷 2개</td>
+        </tr>
+        <tr>
+          <td class="time-cell">11:00–12:30</td>
+          <td>감귤농장 + 하례 점빵</td>
+          <td><span class="scene-dot" style="background:var(--s05)"></span>S05 — CHORUS <span class="star">★</span></td>
+          <td>전원 + 어르신 1–2명</td>
+          <td class="note-cell"><span class="star">★ 핵심 장면</span> · 점빵 보조 컷</td>
+        </tr>
+        <tr>
+          <td class="time-cell">12:30–13:20</td>
+          <td>농장 인근</td>
+          <td><span class="scene-dot" style="background:var(--lunch)"></span>점심 휴식</td>
+          <td>—</td>
+          <td class="note-cell">—</td>
+        </tr>
+        <tr>
+          <td class="time-cell">13:30–15:30</td>
+          <td>망장포 + 쇠소깍</td>
+          <td><span class="scene-dot" style="background:var(--s06)"></span>S06 — 줍깅</td>
+          <td>전원 + 자원봉사자</td>
+          <td class="note-cell">조끼·장갑 준비</td>
+        </tr>
+        <tr class="part-b-row">
+          <td class="time-cell">15:30–16:00</td>
+          <td>효돈천</td>
+          <td><span class="scene-dot" style="background:var(--p01)"></span>P01 — 주민 인터뷰</td>
+          <td>어르신 + 학생 일부</td>
+          <td class="note-cell">필요시 별도 일정</td>
+        </tr>
+        <tr>
+          <td class="time-cell">16:00–16:30</td>
+          <td>고살리숲 or 쇠소깍</td>
+          <td><span class="scene-dot" style="background:var(--outro)"></span>OUTRO 엔딩 그룹샷</td>
+          <td>전원</td>
+          <td class="note-cell">손 흔들기 엔딩</td>
+        </tr>
+        <tr>
+          <td class="time-cell">16:30</td>
+          <td colspan="4" class="note-cell">철수</td>
+        </tr>
+        <tr>
+          <td class="time-cell drone-note">(별도)</td>
+          <td>남내소</td>
+          <td><span class="scene-dot" style="background:var(--drone)"></span>드론샷 — OUTRO 몽타주</td>
+          <td>드론 기사</td>
+          <td class="note-cell drone-note">날씨·인허가 별도 확인 ✈️</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="drone-box">
+      <span>✈️</span>
+      <div><strong>남내소 드론촬영</strong>은 메인 촬영 당일과 별도 일정으로 진행. 드론 기사 섭외 + 효돈천 인근 촬영 인허가 사전 확인 필요 (액션 아이템 #10).</div>
+    </div>
+  </div>
+
+  <!-- ── OPTION B ── -->
+  <div class="panel" id="panel-opt-b">
+    <div class="option-banner b">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+          <strong>Option B — 2일 분산 촬영</strong>
+        </div>
+        <p>학생 수업 일정 제약이 클 경우 선택. Day 1 학교 중심 · Day 2 마을 중심.</p>
+      </div>
+    </div>
+
+    <div class="gantt-wrap">
+      <div class="gantt-head">타임라인 — Day 1 (학교 중심)</div>
+      <div class="gantt-body">
+        <div class="gantt-ruler" id="ruler-b1"></div>
+        <div id="gantt-b1"></div>
+      </div>
+    </div>
+
+    <div class="gantt-wrap">
+      <div class="gantt-head">타임라인 — Day 2 (마을 중심)</div>
+      <div class="gantt-body">
+        <div class="gantt-ruler" id="ruler-b2"></div>
+        <div id="gantt-b2"></div>
+      </div>
+    </div>
+
+    <div class="section-title">Day 1 — 학교 중심</div>
+    <table class="sched-table">
+      <thead>
+        <tr><th>시간</th><th>장소</th><th>장면</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="time-cell">07:30–08:20</td>
+          <td>고살리숲 + 등교길</td>
+          <td><span class="scene-dot" style="background:var(--s01)"></span>S01 <span class="scene-dot" style="background:var(--s02)"></span>S02</td>
+        </tr>
+        <tr>
+          <td class="time-cell">08:30–10:00</td>
+          <td>하례초 텃밭</td>
+          <td><span class="scene-dot" style="background:var(--s03)"></span>S03</td>
+        </tr>
+        <tr>
+          <td class="time-cell">10:00–11:00</td>
+          <td>하례초 교내</td>
+          <td><span class="scene-dot" style="background:var(--s04)"></span>S04 — 교내 자전거</td>
+        </tr>
+        <tr class="part-b-row">
+          <td class="time-cell">11:00–12:00</td>
+          <td>하례초 교실</td>
+          <td><span class="scene-dot" style="background:var(--p03)"></span>P03 음악 제작 &nbsp;<span class="scene-dot" style="background:var(--p04)"></span>P04 독서 토론</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="section-title" style="margin-top:20px;">Day 2 — 마을 중심</div>
+    <table class="sched-table">
+      <thead>
+        <tr><th>시간</th><th>장소</th><th>장면</th></tr>
+      </thead>
+      <tbody>
+        <tr class="part-b-row">
+          <td class="time-cell">09:00–10:00</td>
+          <td>걸서악·하례습지</td>
+          <td><span class="scene-dot" style="background:var(--p02)"></span>P02 — 생태 탐험</td>
+        </tr>
+        <tr class="part-b-row">
+          <td class="time-cell">10:00–11:00</td>
+          <td>효돈천</td>
+          <td><span class="scene-dot" style="background:var(--p01)"></span>P01 — 주민 인터뷰</td>
+        </tr>
+        <tr>
+          <td class="time-cell">11:00–12:30</td>
+          <td>감귤농장 + 하례 점빵</td>
+          <td><span class="scene-dot" style="background:var(--s05)"></span>S05 — CHORUS <span class="star">★</span></td>
+        </tr>
+        <tr>
+          <td class="time-cell">13:30–15:30</td>
+          <td>망장포 + 쇠소깍</td>
+          <td><span class="scene-dot" style="background:var(--s06)"></span>S06 — 줍깅</td>
+        </tr>
+        <tr>
+          <td class="time-cell">16:00–16:30</td>
+          <td>고살리숲 or 쇠소깍</td>
+          <td><span class="scene-dot" style="background:var(--outro)"></span>OUTRO 엔딩 그룹샷</td>
+        </tr>
+        <tr>
+          <td class="time-cell drone-note">(별도)</td>
+          <td>남내소</td>
+          <td><span class="scene-dot" style="background:var(--drone)"></span>드론샷 — OUTRO 몽타주</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── SCENES ── -->
+  <div class="panel" id="panel-scenes">
+
+    <div class="scene-section-head">PART A — 가사 기반 씬 6개</div>
+    <div class="scene-grid" id="scenes-a"></div>
+
+    <div class="scene-section-head">PART B — 프로그램 기반 인서트 4개</div>
+    <div class="scene-grid" id="scenes-b"></div>
+
+    <div class="section-title location-table">필수 등장 장소 — 6개</div>
+    <table class="sched-table">
+      <thead>
+        <tr><th>장소</th><th>역할</th><th>해당 씬</th><th>특징</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>고살리숲</strong></td>
+          <td>새소리 오프닝 · 생태탐험 배경</td>
+          <td>S01, P02</td>
+          <td class="note-cell">수생생물·식생. 아침 자연음 최적</td>
+        </tr>
+        <tr>
+          <td><strong>남내소</strong></td>
+          <td>드론샷 · OUTRO 몽타주</td>
+          <td>S06</td>
+          <td class="note-cell drone-note">별도 인허가 필요 ✈️</td>
+        </tr>
+        <tr>
+          <td><strong>감귤농장 + 하례 점빵</strong></td>
+          <td>CHORUS 클라이맥스 ★</td>
+          <td>S05</td>
+          <td class="note-cell"><span class="star">★</span> 핵심 감정씬 · 마을 주민 교류</td>
+        </tr>
+        <tr>
+          <td><strong>망장포 + 쇠소깍</strong></td>
+          <td>VERSE 2 줍깅</td>
+          <td>S06</td>
+          <td class="note-cell">해변 줍깅 · 독특한 수변 경관</td>
+        </tr>
+        <tr>
+          <td><strong>효돈천</strong></td>
+          <td>주민 인터뷰</td>
+          <td>P01</td>
+          <td class="note-cell">유네스코 생물권보존지역. 원앙 서식</td>
+        </tr>
+        <tr>
+          <td><strong>하례초등학교</strong></td>
+          <td>등교길·텃밭·자전거·교실</td>
+          <td>S02~S04, P03, P04</td>
+          <td class="note-cell">교내 허가 간소. 재연 유연</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── ACTIONS ── -->
+  <div class="panel" id="panel-actions">
+    <p class="action-count">총 <strong>10</strong>개 항목 — <strong id="done-count">0</strong>개 완료. 항목을 클릭해 체크할 수 있습니다.</p>
+    <div class="action-grid" id="action-list"></div>
+  </div>
+
+  <!-- ── MILESTONES ── -->
+  <div class="panel" id="panel-milestones">
+    <div class="section-title">전체 마일스톤</div>
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+</div>
+
+<script>
+// ── COLORS ──
+const C = {
+  s01:'#E8845A', s02:'#F0997B', s03:'#3B6D11', s04:'#1D9E75',
+  s05:'#E8A020', s06:'#4A90C4',
+  p01:'#9B59B6', p02:'#6C9E3A', p03:'#5B8DD9', p04:'#7AADCC',
+  setup:'#AAB8A6', lunch:'#D4C5A9', outro:'#7B5EA7', drone:'#C47AB5'
+};
+
+// ── GANTT HELPERS ──
+const DAY_START = 7*60+20, DAY_END = 16*60+30;
+const B1_START = 7*60+20,  B1_END  = 12*60+30;
+const B2_START = 9*60,     B2_END  = 17*60;
+
+function toMin(h,m){ return h*60+m; }
+function pct(min, s, e){ return ((min-s)/(e-s)*100).toFixed(2)+'%'; }
+function wpct(s0,e0,s,e){ return ((e0-s0)/(e-s)*100).toFixed(2)+'%'; }
+
+function buildRuler(id, start, end){
+  const el = document.getElementById(id); el.innerHTML='';
+  for(let m=start; m<=end; m+=60){
+    const sp = document.createElement('span');
+    sp.textContent = `${String(Math.floor(m/60)).padStart(2,'0')}:00`;
+    sp.style.flex='1'; sp.style.minWidth='40px';
+    el.appendChild(sp);
+  }
+}
+
+function buildGantt(id, rows, dayS, dayE){
+  const el = document.getElementById(id); el.innerHTML='';
+  rows.forEach(r=>{
+    const row = document.createElement('div'); row.className='gantt-row';
+    const lbl = document.createElement('div'); lbl.className='gantt-label'; lbl.innerHTML=r.label;
+    const trk = document.createElement('div'); trk.className='gantt-track';
+    const bar = document.createElement('div');
+    bar.className='gantt-bar'+(r.dark?' dark-text':'');
+    bar.style.background=r.color;
+    bar.style.left=pct(r.s,dayS,dayE);
+    bar.style.width=wpct(r.s,r.e,dayS,dayE);
+    bar.textContent=r.text; bar.title=r.tip||r.text;
+    trk.appendChild(bar); row.appendChild(lbl); row.appendChild(trk); el.appendChild(row);
+  });
+}
+
+// ── OPTION A GANTT DATA ──
+const rowsA = [
+  {label:'준비',        s:toMin(7,20), e:toMin(7,30),  color:C.setup,  text:'장비 셋업',             tip:'07:20 학교 주차장'},
+  {label:'S01',         s:toMin(7,30), e:toMin(8,0),   color:C.s01,    text:'고살리숲 새소리 🌿',    tip:'07:30–08:00 골든아워 자연음'},
+  {label:'S02',         s:toMin(8,0),  e:toMin(8,30),  color:C.s02,    text:'등교길 🌅',             tip:'08:00–08:30 골든아워 역광'},
+  {label:'S03',         s:toMin(8,30), e:toMin(9,20),  color:C.s03,    text:'텃밭 🌱',               tip:'08:30–09:20 학교 텃밭'},
+  {label:'S04',         s:toMin(9,30), e:toMin(10,30), color:C.s04,    text:'교내 자전거 🚲',        tip:'09:30–10:30 교내'},
+  {label:'P03+P04',     s:toMin(10,30),e:toMin(11,0),  color:C.p03,    text:'교실 인서트',            tip:'10:30–11:00 음악제작·독서토론'},
+  {label:'S05 ★',       s:toMin(11,0), e:toMin(12,30), color:C.s05,    text:'감귤+점빵 🍊★', dark:true, tip:'11:00–12:30 CHORUS 클라이맥스'},
+  {label:'점심',        s:toMin(12,30),e:toMin(13,20), color:C.lunch,  text:'점심 휴식', dark:true,   tip:'12:30–13:20'},
+  {label:'S06',         s:toMin(13,30),e:toMin(15,30), color:C.s06,    text:'줍깅 🌊 망장포·쇠소깍', tip:'13:30–15:30'},
+  {label:'P01',         s:toMin(15,30),e:toMin(16,0),  color:C.p01,    text:'효돈천 인터뷰',          tip:'15:30–16:00 (가능시)'},
+  {label:'OUTRO',       s:toMin(16,0), e:toMin(16,30), color:C.outro,  text:'엔딩 그룹샷',            tip:'16:00–16:30'},
+];
+
+// ── OPTION B DAY 1 ──
+const rowsB1 = [
+  {label:'S01+S02', s:toMin(7,30), e:toMin(8,20), color:C.s01, text:'고살리숲+등교길'},
+  {label:'S03',     s:toMin(8,30), e:toMin(10,0), color:C.s03, text:'텃밭 🌱'},
+  {label:'S04',     s:toMin(10,0), e:toMin(11,0), color:C.s04, text:'교내 자전거 🚲'},
+  {label:'P03+P04', s:toMin(11,0), e:toMin(12,0), color:C.p03, text:'교실 인서트'},
+];
+
+// ── OPTION B DAY 2 ──
+const rowsB2 = [
+  {label:'P02',     s:toMin(9,0),  e:toMin(10,0),  color:C.p02,  text:'생태탐험 걸서악'},
+  {label:'P01',     s:toMin(10,0), e:toMin(11,0),  color:C.p01,  text:'효돈천 인터뷰'},
+  {label:'S05 ★',   s:toMin(11,0), e:toMin(12,30), color:C.s05,  text:'감귤+점빵 ★', dark:true},
+  {label:'S06',     s:toMin(13,30),e:toMin(15,30), color:C.s06,  text:'줍깅 🌊'},
+  {label:'OUTRO',   s:toMin(16,0), e:toMin(16,30), color:C.outro,text:'엔딩 그룹샷'},
+];
+
+// ── LEGEND ──
+const legendItems = [
+  {color:C.s01, label:'S01 고살리숲'},
+  {color:C.s02, label:'S02 등교길'},
+  {color:C.s03, label:'S03 텃밭'},
+  {color:C.s04, label:'S04 자전거'},
+  {color:C.s05, label:'S05 감귤+점빵'},
+  {color:C.s06, label:'S06 줍깅'},
+  {color:C.p01, label:'P01 인터뷰', b:true},
+  {color:C.p02, label:'P02 생태탐험', b:true},
+  {color:C.p03, label:'P03 음악제작', b:true},
+  {color:C.p04, label:'P04 독서토론', b:true},
+];
+
+function buildLegend(){
+  const el = document.getElementById('legend-a');
+  let html = '<span class="legend-group-label">PART A</span>';
+  legendItems.slice(0,6).forEach(x=>{
+    html+=`<span class="legend-item"><span class="legend-dot" style="background:${x.color}"></span>${x.label}</span>`;
+  });
+  html+='<span class="legend-sep"></span><span class="legend-group-label">PART B</span>';
+  legendItems.slice(6).forEach(x=>{
+    html+=`<span class="legend-item"><span class="legend-dot" style="background:${x.color}"></span>${x.label}</span>`;
+  });
+  el.innerHTML=html;
+}
+
+// ── SCENE CARDS ──
+const scenesA = [
+  {
+    id:'S01', title:'🌿 고살리숲 — 새소리 오프닝', time:'0:00–0:10',
+    color:C.s01, part:'VERSE 1 오프닝',
+    lyrics:'"어디선가 들려오는 새 소리"',
+    chips:['07:30–08:00','학생 3명','새소리 자연음','골든아워']
+  },
+  {
+    id:'S02', title:'🌅 등교길 — 마을 골목', time:'0:10–0:20',
+    color:C.s02, part:'VERSE 1',
+    lyrics:'"하례초에 등교하는 이 길이"',
+    chips:['08:00–08:30','학생 4명','골든아워 역광','✅ 재연 가능']
+  },
+  {
+    id:'S03', title:'🌱 학교 텃밭', time:'0:20–0:50',
+    color:C.s03, part:'VERSE 1',
+    lyrics:'"텃밭에서 날 기다린 새 싹이 / 나의 하루 만들어가요"',
+    chips:['08:30–09:20','학생 6명 + 담임','새싹 클로즈업','✅ 재연 가능']
+  },
+  {
+    id:'S04', title:'🚲 교내 자전거', time:'0:50–1:10',
+    color:C.s04, part:'PRECHORUS',
+    lyrics:'"자전거를 타면 들려 바람소리 / 풍경 따라 나를 스쳐 지나가"',
+    chips:['09:30–10:30','학생 3명','교내 촬영','✅ 재연 가능']
+  },
+  {
+    id:'S05 ★', title:'🍊 감귤농장 + 하례 점빵', time:'1:10–1:40',
+    color:C.s05, part:'CHORUS ★',
+    lyrics:'"하례 생태 지킴이 준비됐 / 하례초 만들어요 모두가 약속해"',
+    chips:['KEY: 감정 클라이맥스','11:00–12:30','전원 + 어르신','다큐 터치'],
+    key: true
+  },
+  {
+    id:'S06', title:'🌊 망장포·쇠소깍 줍깅 + 남내소 드론', time:'1:40–2:30',
+    color:C.s06, part:'VERSE 2 + OUTRO',
+    lyrics:'"페트병을 모아 자원 재활용 / 아껴써 나눠써 바꿔써 재써"',
+    chips:['13:30–15:30','전원 + 자원봉사자','조끼·장갑','남내소 드론 별도']
+  },
+];
+
+const scenesB = [
+  {
+    id:'P01', title:'🗣 효돈천 마을 주민 인터뷰', time:'삽입 컷',
+    color:C.p01, part:'프로그램 기반',
+    desc:'지역 어르신이 효돈천을 지켜라 활동에 대해 이야기하는 인터뷰 컷.',
+    chips:['15:30–16:00 or 별도','어르신 + 학생 일부','다큐 인터뷰 스타일']
+  },
+  {
+    id:'P02', title:'🔍 걸서악·하례습지 생태탐험', time:'삽입 컷',
+    color:C.p02, part:'프로그램 기반',
+    desc:'학생들이 걸서악이나 하례습지에서 생물을 관찰하고 채집하는 생태탐험 장면.',
+    chips:['Option B Day2','학생 5명 + 지도 교사','생물 클로즈업']
+  },
+  {
+    id:'P03', title:'🎵 학교 음악 제작', time:'삽입 컷',
+    color:C.p03, part:'프로그램 기반',
+    desc:'5학년 학생들이 교실에서 악기를 다루거나 녹음 작업을 하는 장면.',
+    chips:['10:30–11:00','학생 전원','교실·녹음','✅ 재연 가능']
+  },
+  {
+    id:'P04', title:'📚 생태 독서 토론', time:'삽입 컷',
+    color:C.p04, part:'프로그램 기반',
+    desc:'학생들이 생태 관련 책을 읽고 토론하는 장면. 손들기 컷 + 그룹 와이드.',
+    chips:['10:30–11:00','학생 전원','교실·도서관','✅ 재연 가능']
+  },
+];
+
+function buildScenes(){
+  function render(scenes, containerId){
+    const el = document.getElementById(containerId); el.innerHTML='';
+    scenes.forEach(s=>{
+      const card = document.createElement('div'); card.className='scene-card';
+      const chipsHtml = s.chips.map((c,i)=>{
+        if(s.key && i===0) return `<span class="chip key">${c}</span>`;
+        if(c.includes('AI') || c.includes('드론')) return `<span class="chip ai">${c}</span>`;
+        return `<span class="chip">${c}</span>`;
+      }).join('');
+      const bodyContent = s.lyrics
+        ? `<div class="lyrics">${s.lyrics}</div>`
+        : `<div class="program-desc">${s.desc}</div>`;
+      card.innerHTML=`
+        <div class="scene-card-head" style="background:${s.color}">
+          <span>${s.id} · ${s.part}</span>
+          <span class="time">${s.time}</span>
+        </div>
+        <div class="scene-card-body">
+          <h3>${s.title}</h3>
+          ${bodyContent}
+          <div class="meta-row">${chipsHtml}</div>
+        </div>`;
+      el.appendChild(card);
+    });
+  }
+  render(scenesA, 'scenes-a');
+  render(scenesB, 'scenes-b');
+}
+
+// ── ACTION ITEMS ──
+const actions = [
+  {id:1, text:'스토리보드 최종 확정 후 학교 전달', owner:'스트롤러', deadline:'5/23', priority:'P1'},
+  {id:2, text:'학생 출연 동의서 수거', owner:'학교(담임)', deadline:'5/26', priority:'P1'},
+  {id:3, text:'촬영 가능 날짜 확정 (5/28~30 내)', owner:'담임샘', deadline:'5/23', priority:'P1'},
+  {id:4, text:'마을 주민 섭외 (감귤농장 어르신, 효돈천 인터뷰 대상)', owner:'학교 협조', deadline:'5/26', priority:'P2'},
+  {id:5, text:'촬영 장소 접근 허가 확인 (망장포·쇠소깍·효돈천·걸서악·하례습지)', owner:'스트롤러', deadline:'5/26', priority:'P2'},
+  {id:6, text:'기획안 최종본 학교 전달', owner:'스트롤러', deadline:'5/23', priority:'P1'},
+  {id:7, text:'편집 1차본 제출', owner:'스트롤러', deadline:'6/5', priority:'P1'},
+  {id:8, text:'납품 포맷 확인 (유튜브 업로드용 / 학교 행사용)', owner:'담임샘', deadline:'5/23', priority:'P2'},
+  {id:9, text:'AI 씬용 촬영 소스 확보 계획 수립 (학교 건물 스틸·학생 포즈 영상·교표 PNG)', owner:'스트롤러', deadline:'5/26', priority:'P2'},
+  {id:10, text:'남내소 드론 촬영 인허가 및 드론 기사 섭외', owner:'스트롤러', deadline:'5/26', priority:'P2'},
+];
+
+// ── MILESTONES ──
+const milestones = [
+  {date:'05/18', label:'킥오프 미팅 + 스토리보드 v2 완성', status:'done'},
+  {date:'05/23', label:'컨셉·기획안 확정 → 학교 전달', status:'soon'},
+  {date:'05/26', label:'스토리보드 완성 + 동의서 수거 + 드론 인허가 확인', status:'pending'},
+  {date:'05/28–30', label:'촬영 (Option A: 1일 / Option B: 2일)', status:'pending'},
+  {date:'06/05', label:'편집 1차', status:'pending'},
+  {date:'06/10', label:'클라이언트 검수 및 피드백', status:'pending'},
+  {date:'06/17', label:'최종 수정', status:'pending'},
+  {date:'06/20', label:'납품 마감', status:'deadline'},
+];
+
+// ── INIT ──
+let checkedState = JSON.parse(localStorage.getItem('hareecho_actions_v2')||'{}');
+
+function updateDoneCount(){
+  document.getElementById('done-count').textContent = Object.values(checkedState).filter(Boolean).length;
+}
+
+function renderActions(){
+  const list = document.getElementById('action-list'); list.innerHTML='';
+  actions.forEach(a=>{
+    const done = checkedState[a.id]===true;
+    const item = document.createElement('div');
+    item.className='action-item'+(done?' done':'');
+    item.innerHTML=`
+      <div class="action-checkbox"></div>
+      <div class="action-content">
+        <div class="action-text">${a.id}. ${a.text}</div>
+        <div class="action-meta">
+          <span class="action-tag ${a.priority.toLowerCase()}">${a.priority}</span>
+          <span class="action-tag owner">👤 ${a.owner}</span>
+          <span class="action-tag deadline">📅 ${a.deadline}</span>
+        </div>
+      </div>`;
+    item.addEventListener('click',()=>{
+      checkedState[a.id]=!checkedState[a.id];
+      localStorage.setItem('hareecho_actions_v2', JSON.stringify(checkedState));
+      renderActions(); updateDoneCount();
+    });
+    list.appendChild(item);
+  });
+  updateDoneCount();
+}
+
+function renderMilestones(){
+  const tl = document.getElementById('timeline'); tl.innerHTML='';
+  const icons = {done:'✓', today:'★', soon:'!', pending:'·', deadline:'🏁'};
+  const pills  = {done:['done','완료'], soon:['pending','임박'], pending:['pending','예정'], deadline:['deadline','마감']};
+  milestones.forEach(m=>{
+    const div = document.createElement('div'); div.className='milestone';
+    const p = pills[m.status];
+    div.innerHTML=`
+      <div class="ms-dot ${m.status}">${icons[m.status]}</div>
+      <div class="ms-body">
+        <div class="ms-date">${m.date}</div>
+        <div class="ms-title">${m.label}<span class="ms-pill ${p[0]}">${p[1]}</span></div>
+      </div>`;
+    tl.appendChild(div);
+  });
+}
+
+function switchTab(evt, id){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  evt.currentTarget.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+// ── BOOT ──
+buildLegend();
+buildRuler('ruler-a', DAY_START, DAY_END);
+buildGantt('gantt-a', rowsA, DAY_START, DAY_END);
+buildRuler('ruler-b1', B1_START, B1_END);
+buildGantt('gantt-b1', rowsB1, B1_START, B1_END);
+buildRuler('ruler-b2', B2_START, B2_END);
+buildGantt('gantt-b2', rowsB2, B2_START, B2_END);
+buildScenes();
+renderActions();
+renderMilestones();
+</script>
 </body>
 </html>
