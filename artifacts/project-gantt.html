@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Project Gantt",
+  "schemaVersion": 1,
+  "description": "전체 프로젝트 타임라인 Gantt — 하례초·제주도청·호끌락·잇수다 마일스톤 및 D-day 리스크 표시"
+}
+</script>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>프로젝트 타임라인</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f8f9fc;
+    color: #1a1d27;
+    font-family: -apple-system, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    padding: 22px;
+  }
+
+  .top { margin-bottom: 16px; }
+  .top h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: #111; }
+  .top p  { font-size: 11px; color: #9ca3af; margin-top: 3px; }
+
+  /* risk chips */
+  .risk-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .chip {
+    font-size: 11px; font-weight: 600;
+    padding: 4px 10px; border-radius: 20px;
+  }
+
+  /* gantt */
+  .gantt-wrap {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  /* header */
+  .g-head {
+    display: grid;
+    grid-template-columns: 185px 1fr;
+    background: #f1f3f8;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .g-head-title {
+    padding: 9px 14px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase;
+    color: #9ca3af;
+    border-right: 1px solid #e5e7eb;
+  }
+  .g-dates {
+    position: relative;
+    height: 38px;
+    overflow: hidden;
+  }
+  .date-tick {
+    position: absolute; top: 0; bottom: 0;
+    border-left: 1px solid #e5e7eb;
+    display: flex; flex-direction: column;
+    padding: 3px 0 0 4px;
+  }
+  .date-tick .mo { font-size: 9px; font-weight: 700; color: #6b7280; }
+  .date-tick .da { font-size: 10px; color: #9ca3af; line-height: 1.8; }
+
+  /* rows */
+  .g-row {
+    display: grid;
+    grid-template-columns: 185px 1fr;
+    border-bottom: 1px solid #f0f1f4;
+    min-height: 58px;
+  }
+  .g-row:last-child { border-bottom: none; }
+  .g-label {
+    padding: 9px 14px;
+    border-right: 1px solid #e5e7eb;
+    display: flex; flex-direction: column; justify-content: center; gap: 2px;
+  }
+  .g-label .name { font-size: 12px; font-weight: 700; }
+  .g-label .sub  { font-size: 10px; color: #9ca3af; }
+  .g-label .badge {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    padding: 1px 6px; border-radius: 4px; margin-top: 3px; width: fit-content;
+  }
+
+  /* chart */
+  .g-chart { position: relative; overflow: hidden; }
+  .week-line {
+    position: absolute; top: 0; bottom: 0;
+    width: 1px; background: #f0f1f4; z-index: 1;
+  }
+  .today-line {
+    position: absolute; top: 0; bottom: 0;
+    width: 2px; background: #ef4444; opacity: .5; z-index: 5;
+  }
+  .today-tag {
+    position: absolute; top: 3px;
+    font-size: 9px; font-weight: 700; color: #ef4444; opacity: .8;
+    transform: translateX(-50%); z-index: 6; white-space: nowrap;
+  }
+  .bar-bg {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    height: 14px; border-radius: 7px; z-index: 2;
+  }
+  .bar-done {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    height: 14px; border-radius: 7px; z-index: 3;
+  }
+
+  /* milestones */
+  .ms {
+    position: absolute; top: 50%; z-index: 10;
+    transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .diamond {
+    border-radius: 2px;
+    transform: rotate(45deg);
+  }
+  .ms-label {
+    position: absolute; bottom: 14px;
+    white-space: nowrap;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 9px; line-height: 1.4;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    pointer-events: none;
+  }
+
+  /* legend */
+  .legend {
+    display: flex; gap: 16px; margin-top: 14px; flex-wrap: wrap; align-items: center;
+  }
+  .li { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6b7280; }
+  .l-bar  { width: 18px; height: 6px; border-radius: 3px; }
+  .l-d    { width: 8px; height: 8px; border-radius: 1px; transform: rotate(45deg); }
+  .l-today{ width: 2px; height: 13px; background: #ef4444; border-radius: 1px; opacity: .6; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>📅 프로젝트 타임라인 — 2026 5~6월</h1>
+  <p>오늘: 2026년 5월 18일 (월)</p>
+</div>
+
+<div class="risk-row" id="riskRow"></div>
+
+<div class="gantt-wrap">
+  <div class="g-head">
+    <div class="g-head-title">프로젝트</div>
+    <div class="g-dates" id="datesRow"></div>
+  </div>
+  <div id="ganttBody"></div>
+</div>
+
+<div class="legend">
+  <div class="li"><div class="l-bar" style="background:#3b82f6"></div>하례초</div>
+  <div class="li"><div class="l-bar" style="background:#14b8a6"></div>제주도청</div>
+  <div class="li"><div class="l-bar" style="background:#a855f7"></div>호끌락</div>
+  <div class="li"><div class="l-bar" style="background:#f97316"></div>잇수다</div>
+  <div class="li"><div class="l-d" style="border:2px solid #555"></div>마일스톤</div>
+  <div class="li"><div class="l-d" style="background:#ef4444"></div>납품마감</div>
+  <div class="li"><div class="l-today"></div>오늘</div>
+</div>
+
+<script>
+const START = new Date('2026-05-14');
+const END   = new Date('2026-07-05');
+const TODAY = new Date('2026-05-18');
+const TOTAL = (END - START) / 86400000;
+
+const dOff = d => (new Date(d) - START) / 86400000;
+const L    = d => (dOff(d) / TOTAL * 100).toFixed(4) + '%';
+const W    = (s,e) => ((dOff(e) - dOff(s)) / TOTAL * 100).toFixed(4) + '%';
+const daysLeft = d => Math.round((new Date(d) - TODAY) / 86400000);
+
+const PROJECTS = [
+  {
+    name: '하례초 뮤직비디오', sub: `외주 · D-${daysLeft('2026-06-20')}`,
+    color: '#3b82f6', deadline: '2026-06-20', badge: '₩200만',
+    bar: { s:'2026-05-18', e:'2026-06-20' },
+    ms: [
+      {d:'2026-05-18', l:'킥오프', done:true},
+      {d:'2026-05-23', l:'컨셉확정'},
+      {d:'2026-05-26', l:'스토리보드'},
+      {d:'2026-05-28', l:'촬영'},
+      {d:'2026-06-05', l:'편집1차'},
+      {d:'2026-06-10', l:'검수'},
+      {d:'2026-06-17', l:'최종수정'},
+      {d:'2026-06-20', l:'납품', end:true},
+    ]
+  },
+  {
+    name: '제주도청 물정책과', sub: `외주 · D-${daysLeft('2026-06-26')}`,
+    color: '#14b8a6', deadline: '2026-06-26', badge: null,
+    bar: { s:'2026-05-12', e:'2026-06-26' },
+    ms: [
+      {d:'2026-05-12', l:'촬영1차', done:true},
+      {d:'2026-05-26', l:'추가촬영'},
+      {d:'2026-06-10', l:'편집완료'},
+      {d:'2026-06-26', l:'납품', end:true},
+    ]
+  },
+  {
+    name: '호끌락 문화학교', sub: '주간 진행',
+    color: '#a855f7', deadline: null, badge: null,
+    bar: { s:'2026-05-15', e:'2026-06-28' },
+    ms: [
+      {d:'2026-05-18', l:'1주차', done:true},
+      {d:'2026-05-25', l:'2주차'},
+      {d:'2026-06-01', l:'3주차'},
+      {d:'2026-06-08', l:'4주차'},
+      {d:'2026-06-15', l:'5주차'},
+      {d:'2026-06-22', l:'6주차'},
+    ]
+  },
+  {
+    name: '잇수다 제주잡지', sub: `외주 · D-${daysLeft('2026-06-18')}`,
+    color: '#f97316', deadline: '2026-06-18', badge: null,
+    bar: { s:'2026-05-14', e:'2026-06-18' },
+    ms: [
+      {d:'2026-06-18', l:'납품 마감', end:true},
+    ]
+  },
+];
+
+// risk chips
+const riskRow = document.getElementById('riskRow');
+PROJECTS.filter(p => p.deadline).forEach(p => {
+  const dl = daysLeft(p.deadline);
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  let bg, fg;
+  if      (dl <= 14) { bg='#fef2f2'; fg='#ef4444'; }
+  else if (dl <= 28) { bg='#fefce8'; fg='#ca8a04'; }
+  else               { bg='#f0fdf4'; fg='#16a34a'; }
+  chip.style.cssText = `background:${bg};color:${fg};border:1px solid ${fg}33`;
+  chip.textContent = `${p.name}  D-${dl}`;
+  riskRow.appendChild(chip);
+});
+
+// date header
+const datesRow = document.getElementById('datesRow');
+let d = new Date(START), prevMo = -1;
+while (d < END) {
+  const tick = document.createElement('div');
+  tick.className = 'date-tick';
+  tick.style.left = L(d.toISOString().slice(0,10));
+  const mo = d.getMonth()+1, da = d.getDate();
+  if (mo !== prevMo) {
+    tick.innerHTML = `<span class="mo">${mo}월</span><span class="da">${da}</span>`;
+    prevMo = mo;
+  } else {
+    tick.innerHTML = `<span class="da" style="margin-top:14px">${da}</span>`;
+  }
+  datesRow.appendChild(tick);
+  d = new Date(d.getTime() + 7*86400000);
+}
+// today in header
+const ht = document.createElement('div'); ht.className='today-line';
+ht.style.left=L('2026-05-18'); datesRow.appendChild(ht);
+const htl = document.createElement('div'); htl.className='today-tag';
+htl.style.left=L('2026-05-18'); htl.textContent='오늘'; datesRow.appendChild(htl);
+
+// rows
+const body = document.getElementById('ganttBody');
+PROJECTS.forEach(proj => {
+  const row = document.createElement('div'); row.className='g-row';
+
+  // label
+  const lbl = document.createElement('div'); lbl.className='g-label';
+  let badgeHTML = proj.badge
+    ? `<div class="badge" style="background:${proj.color}15;color:${proj.color}">${proj.badge}</div>` : '';
+  lbl.innerHTML = `<div class="name" style="color:${proj.color}">${proj.name}</div>
+    <div class="sub">${proj.sub}</div>${badgeHTML}`;
+  row.appendChild(lbl);
+
+  // chart
+  const chart = document.createElement('div'); chart.className='g-chart';
+
+  // week grid
+  let gd = new Date(START);
+  while (gd < END) {
+    const gl=document.createElement('div'); gl.className='week-line';
+    gl.style.left=L(gd.toISOString().slice(0,10)); chart.appendChild(gl);
+    gd=new Date(gd.getTime()+7*86400000);
+  }
+
+  // today line
+  const tl=document.createElement('div'); tl.className='today-line';
+  tl.style.left=L('2026-05-18'); chart.appendChild(tl);
+
+  // bg bar
+  const bb=document.createElement('div'); bb.className='bar-bg';
+  bb.style.cssText=`left:${L(proj.bar.s)};width:${W(proj.bar.s,proj.bar.e)};background:${proj.color};opacity:.15`;
+  chart.appendChild(bb);
+
+  // done bar
+  const compEnd = proj.bar.e < '2026-05-18' ? proj.bar.e : '2026-05-18';
+  if (compEnd > proj.bar.s) {
+    const db=document.createElement('div'); db.className='bar-done';
+    db.style.cssText=`left:${L(proj.bar.s)};width:${W(proj.bar.s,compEnd)};background:${proj.color};opacity:.65`;
+    chart.appendChild(db);
+  }
+
+  // milestones
+  proj.ms.forEach(ms => {
+    const off = dOff(ms.d);
+    if (off < -3 || off > TOTAL+3) return;
+
+    const wrap = document.createElement('div'); wrap.className='ms';
+    wrap.style.left = L(ms.d);
+
+    const sz = ms.end ? 13 : 9;
+    const bg = ms.done ? proj.color : ms.end ? '#ef4444' : 'transparent';
+    const border = ms.done ? 'none' : ms.end ? '2.5px solid #ef4444' : `2px solid ${proj.color}`;
+
+    const diam = document.createElement('div'); diam.className='diamond';
+    diam.style.cssText=`width:${sz}px;height:${sz}px;background:${bg};border:${border};box-shadow:0 0 6px ${proj.color}44`;
+    wrap.appendChild(diam);
+
+    const lbl2 = document.createElement('div'); lbl2.className='ms-label';
+    lbl2.style.color = ms.done ? proj.color : ms.end ? '#ef4444' : '#374151';
+    lbl2.style.opacity = ms.done ? '0.7' : '1';
+    lbl2.textContent = (ms.done?'✓ ':'') + ms.l;
+    wrap.appendChild(lbl2);
+
+    chart.appendChild(wrap);
+  });
+
+  row.appendChild(chart);
+  body.appendChild(row);
+});
+</script>
+</body>
+</html>

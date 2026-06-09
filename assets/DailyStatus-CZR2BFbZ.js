@@ -1,0 +1,1 @@
+import{j as t}from"./index-RUukQnaj.js";function i(){return t.jsx("iframe",{src:"/artifacts/daily-status.html",style:{width:"100%",height:"100%",border:"none",display:"block",position:"absolute",inset:0},title:"Daily Status"})}export{i as default};

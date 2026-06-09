@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Daily Status",
+  "schemaVersion": 1,
+  "description": "스트롤러 데일리 현황판. Obsidian 볼트(ObsidianVault_PALSON)의 01-Projects 폴더를 직접 읽어 프로젝트별 미완료 태스크·진행률·D-day를 실시간으로 표시합니다. 새로고침 버튼으로 최신 상태를 불러올 수 있습니다.",
+  "mcpTools": [
+    "mcp__workspace__bash"
+  ],
+  "mcpServerNames": [
+    "workspace"
+  ]
+}
+</script>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스트롤러 데일리</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; background: #f5f4f1; color: #1c1c1e; min-height: 100vh; }
+
+    .header { background: #fff; border-bottom: 1px solid #e8e8e8; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .date-block .day-sub { font-size: 11px; font-weight: 600; color: #999; letter-spacing: 0.8px; }
+    .date-block .date-main { font-size: 20px; font-weight: 700; color: #1c1c1e; margin-top: 2px; letter-spacing: -0.3px; }
+    .snap-badge { font-size: 11px; color: #999; background: #f5f5f5; border: 1px solid #e8e8e8; border-radius: 20px; padding: 5px 12px; }
+
+    .content { max-width: 880px; margin: 0 auto; padding: 22px 20px 48px; }
+    .section-label { font-size: 10px; font-weight: 700; color: #aaa; letter-spacing: 1px; margin-bottom: 12px; }
+
+    .week-pulse { background: #fff; border: 1px solid #e8e8e8; border-radius: 12px; padding: 16px 20px; margin-bottom: 22px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .pulse-stat { }
+    .pulse-val { font-size: 22px; font-weight: 700; color: #1c1c1e; line-height: 1.1; }
+    .pulse-val.red   { color: #c53030; }
+    .pulse-val.amber { color: #c05621; }
+    .pulse-val.green { color: #276749; }
+    .pulse-lbl { font-size: 11px; color: #999; margin-top: 3px; }
+    .pulse-divider { width: 1px; background: #f0f0f0; }
+
+    .risk-banner { border-radius: 10px; padding: 12px 16px; margin-bottom: 22px; }
+    .risk-banner.critical { background: #fff5f5; border: 1px solid #fecaca; }
+    .risk-banner.warning  { background: #fffbeb; border: 1px solid #f5d769; }
+    .risk-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; }
+    .risk-banner.critical .risk-label { color: #c53030; }
+    .risk-banner.warning  .risk-label { color: #a16207; }
+    .risk-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 13px; }
+    .risk-row + .risk-row { border-top: 1px solid rgba(0,0,0,0.05); }
+    .risk-name { font-weight: 500; }
+    .risk-reason { font-size: 11px; color: #888; }
+    .risk-tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .tag-critical { background: #fde8e8; color: #c53030; }
+    .tag-warning  { background: #feecdc; color: #c05621; }
+    .tag-watch    { background: #f3f4f6; color: #6b7280; }
+
+    .urgency-card { background: #fffbeb; border: 1px solid #f5d769; border-radius: 12px; padding: 14px 18px; margin-bottom: 22px; }
+    .urgency-label { font-size: 10px; font-weight: 700; color: #a16207; letter-spacing: 1px; margin-bottom: 10px; }
+    .urgency-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+    .urgency-row + .urgency-row { border-top: 1px solid #fde68a; }
+    .urgency-name { font-size: 13px; font-weight: 500; }
+    .urgency-right { display: flex; align-items: center; gap: 8px; }
+    .remaining-txt { font-size: 11px; color: #999; }
+    .dday { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+    .dday-urgent { background: #fde8e8; color: #c53030; }
+    .dday-warn   { background: #feecdc; color: #c05621; }
+    .dday-ok     { background: #e6fffa; color: #276749; }
+
+    .schedule-section { margin-bottom: 4px; }
+    .timeline-day { display: flex; gap: 14px; margin-bottom: 10px; align-items: flex-start; }
+    .timeline-date { min-width: 52px; text-align: right; padding-top: 2px; }
+    .timeline-date .tdate { font-size: 13px; font-weight: 700; color: #1c1c1e; }
+    .timeline-date .tday  { font-size: 10px; color: #999; font-weight: 600; }
+    .timeline-dot-col { display: flex; flex-direction: column; align-items: center; padding-top: 5px; }
+    .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
+    .timeline-dot.done     { background: #276749; }
+    .timeline-dot.upcoming { background: #e85d04; box-shadow: 0 0 0 3px #fde3d4; }
+    .timeline-dot.thisweek { background: #185FA5; box-shadow: 0 0 0 3px #dbeafe; }
+    .timeline-line { width: 2px; background: #e8e8e8; margin-top: 5px; min-height: 24px; flex: 1; }
+    .timeline-body { flex: 1; padding-bottom: 4px; }
+    .timeline-event { background: #fff; border: 1px solid #e8e8e8; border-radius: 10px; padding: 9px 14px; margin-bottom: 5px; }
+    .timeline-event.done-ev { opacity: 0.5; }
+    .timeline-event.thisweek-ev { border-color: #bfdbfe; background: #f0f7ff; }
+    .timeline-event-top { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+    .timeline-time  { font-size: 11px; color: #999; font-weight: 600; white-space: nowrap; }
+    .timeline-title { font-size: 13px; font-weight: 700; color: #1c1c1e; }
+    .timeline-desc  { font-size: 12px; color: #666; line-height: 1.5; margin-top: 2px; }
+    .timeline-tags  { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+    .ttag { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
+    .ttag-shoot   { background: #dbeafe; color: #1d4ed8; }
+    .ttag-client  { background: #f3e8ff; color: #7e22ce; }
+    .ttag-done    { background: #d1fae5; color: #065f46; }
+    .ttag-tbd     { background: #f3f4f6; color: #6b7280; }
+    .ttag-prep    { background: #fff7ed; color: #c2410c; }
+    .ttag-meeting { background: #fdf4ff; color: #7e22ce; }
+    .ttag-thisweek { background: #dbeafe; color: #1d4ed8; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .grid.wide { grid-template-columns: 1fr; }
+    @media (max-width: 580px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: #fff; border-radius: 12px; padding: 16px 18px; border: 1px solid #e8e8e8; }
+    .card.card-risk-critical { border-color: #fca5a5; }
+    .card.card-risk-warning  { border-color: #fde68a; }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+    .card-name { font-size: 14px; font-weight: 600; line-height: 1.35; flex: 1; }
+    .card-badges { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .badge { font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+    .badge-out  { background: #ebf4ff; color: #2b6cb0; }
+    .badge-self { background: #e6fffa; color: #276749; }
+    .badge-sys  { background: #f3f0ff; color: #553c9a; }
+    .risk-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+    .risk-dot.critical { background: #e53e3e; }
+    .risk-dot.warning  { background: #e67e22; }
+    .risk-dot.watch    { background: #a0aec0; }
+    .risk-dot.ok       { background: #38a169; }
+    .risk-dot.none     { background: #d0d0d0; }
+    .prog-track { background: #f0f0f0; border-radius: 100px; height: 3px; margin-bottom: 4px; overflow: hidden; }
+    .prog-fill { background: #1c1c1e; height: 100%; border-radius: 100px; }
+    .prog-fill.fill-critical { background: #e53e3e; }
+    .prog-fill.fill-warning  { background: #e67e22; }
+    .prog-text { font-size: 10px; color: #bbb; text-align: right; margin-bottom: 10px; }
+    .task-list { list-style: none; }
+    .task-item { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; font-size: 12px; color: #555; border-bottom: 1px solid #f8f8f8; }
+    .task-item:last-child { border-bottom: none; }
+    .task-box { width: 12px; height: 12px; border: 1.5px solid #d0d0d0; border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+    .task-item.highlight .task-box { border-color: #e85d04; }
+    .task-item.highlight span { color: #1c1c1e; font-weight: 500; }
+    .no-tasks { font-size: 12px; color: #bbb; text-align: center; padding: 12px 0; }
+    .more-tasks { font-size: 11px; color: #bbb; padding: 4px 0; }
+    .card-footer { font-size: 11px; color: #bbb; margin-top: 10px; padding-top: 8px; border-top: 1px solid #f5f5f5; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
+    .budget-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+    .budget-pending  { background: #fff7ed; color: #c05621; }
+    .budget-invoiced { background: #e6fffa; color: #276749; }
+    .budget-none     { background: #f5f5f5; color: #bbb; }
+
+    .footer-note { text-align: center; font-size: 11px; color: #ccc; margin-top: 16px; line-height: 1.8; }
+    .footer-note strong { color: #aaa; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="date-block">
+    <div class="day-sub" id="day-sub"></div>
+    <div class="date-main" id="date-main"></div>
+  </div>
+  <span class="snap-badge">v5 · 2026-05-18</span>
+</div>
+
+<div class="content">
+  <div id="week-pulse-wrap"></div>
+  <div id="risk-wrap"></div>
+  <div id="urgency-wrap"></div>
+  <div id="main-wrap"></div>
+  <div class="footer-note">
+    업데이트: Claude에게 <strong>「대시보드 업데이트해줘」</strong> 요청<br>
+    볼트 위치: iCloud › Obsidian › ObsidianVault_PALSON › 01-Projects
+  </div>
+</div>
+
+<script>
+  const DAYS_KR = ['일','월','화','수','목','금','토'];
+  const now = new Date();
+  document.getElementById('day-sub').textContent = `${now.getFullYear()} · ${DAYS_KR[now.getDay()]}요일`;
+  document.getElementById('date-main').textContent = `${now.getMonth()+1}월 ${now.getDate()}일`;
+
+  // ── 스냅샷 데이터 (2026-05-18) ──
+  const DATA = {
+    '제주도청-물정책과-홍보영상.md': {
+      todos: [
+        '물정책과 지하수 관측통합운영실 (도청 본관) — 실시간 모니터링 화면, AI 수위 예측 대시보드',
+        '지하수 관측정 현장 (1~2개소 선정) — 관측정 외관·계측장비, 지하수위 측정 장면',
+        '제주삼다수 취수원 및 견학관 (조천읍) — 한라산 취수원 경관, 스마트팩토리, 전시관',
+        '제주도 수문지질 분석 시스템 현장 — GIS 기반 관측망 화면, 수위 이상 탐지 장면',
+        'B-roll: 제주 해안가 용천수 현장',
+        'B-roll: 강우 집수 장면 (시즌 맞춰 별도 계획)',
+        '편집', '납품',
+        '위미리 중규모 빗물이용시설 (서귀포시 남원읍) — 비닐하우스 168개소 집수설비',
+        '서부하수처리장 재이용 시설 / 판포하수처리장 (한경면 판포리)',
+        '하수처리수 재이용 시설 (도내 8개소 중 선정)',
+        '중수도 시설 대표 건물 (공공시설 1~2개소)',
+        '빗물저금통 시설 (이화요양원·무지개마을·송죽원 중 선정)',
+        '한국가스공사 제주기지 응축수 대체수자원 — 섭외 후 확인',
+        '관측정 현장 추천 및 출입 협조',
+        '하수처리장 시설 내부 촬영 허가',
+        '중수도 시설 추천 (접근 가능 공공시설 1~2개소)',
+        '위미리 빗물시설 관계자 섭외 협조',
+        '물정책과 자체 보유 시설 목록 공유'
+      ],
+      done: 2, meta: { deadline: '2026-06-26' },
+      budget: { amount: 15000000, vatSep: false, status: 'pending', deduction: { label: '언진 수수료', amount: 90000 } },
+      highlights: []
+    },
+    '호끌락-문화학교.md': {
+      todos: [
+        '2주차 준비 — 다음 주 수업 콘텐츠 확정 및 업로드 동의·안내',
+        '2주차 — 5/28', '3주차 — 6/4', '4주차 — 6/11',
+        '5주차 — 6/18', '6주차 — 6/25', '7주차 — 7/2', '8주차 — 7/9',
+        '수지쌤 인터뷰 편집 후 업로드',
+        '문봉순선생님 해설 영상 편집 후 업로드',
+        '자체 채널 + 과정 기록 콘텐츠 업로드'
+      ],
+      done: 1, meta: { deadline: '2026-07-09' },
+      budget: { amount: 1000000, vatSep: false, status: 'pending' },
+      highlights: ['2주차 준비 — 다음 주 수업 콘텐츠 확정 및 업로드 동의·안내']
+    },
+    '잇수다-잡지-제작.md': {
+      todos: [
+        '용천수 잠복취재', '제주도청 과장님 인터뷰',
+        '취재 일정 조율 (3건)', '촬영 (3건)', '글 작성 (4건)',
+        '레이아웃', '교정', '인쇄 납품'
+      ],
+      done: 3, meta: { deadline: '2026-06-18' },
+      budget: { amount: 9000000, vatSep: false, status: 'pending', deduction: { label: '인쇄비(예상)', amount: 3000000 } },
+      highlights: []
+    },
+    '외주-과정-실시간콘텐츠.md': {
+      todos: [
+        '채널/플랫폼 결정', '용천수 사전답사', '종달리 잠수굿',
+        '문봉순 선생님 해설', '제주지하수연구센터 인터뷰', '수지쌤 인터뷰',
+        '물정책과 촬영 현장 비하인드', '잇수다 취재 현장', '호끌락 문화학교 현장'
+      ],
+      done: 0, meta: {}, budget: null, highlights: []
+    },
+    '스트롤-독립잡지-교토편.md': {
+      todos: ['안과 취재', '전체 목차 구성', '뉴스레터 분할 단위 결정 (몇 화?)', '1화 초안'],
+      done: 0, meta: {}, budget: null, highlights: []
+    },
+    '시스템 구축.md': {
+      todos: [
+        'Shortcuts 단축어 3개 설치', 'Obsidian 볼트 + 플러그인 세팅',
+        'Claude 연동 확인', '1주일 사용 후 루틴 체크',
+        'Obsidian 플러그인 5개 설치', 'Focus Mode 설정', '대시보드 동작 확인'
+      ],
+      done: 0, meta: {}, budget: null, highlights: []
+    },
+    '하례초-홍보뮤직비디오.md': {
+      todos: [
+        '컨셉·기획안 확정 — 5/23',
+        '스토리보드 완성 — 5/26',
+        '촬영 — 5/28~30',
+        '편집 1차 — 6/5',
+        '클라이언트 검수 및 피드백 — 6/10',
+        '최종 수정 — 6/17',
+        '납품 — 6/20',
+        '음악 선정 / 의뢰 확인',
+        '출연자 섭외 및 동의서',
+        '촬영 장소 사전답사'
+      ],
+      done: 1, meta: { deadline: '2026-06-20' },
+      budget: { amount: 2000000, vatSep: true, status: 'pending' },
+      highlights: ['컨셉·기획안 확정 — 5/23']
+    }
+  };
+
+  const PROJECTS = [
+    { file: '하례초-홍보뮤직비디오.md',     name: '하례초 홍보 뮤직비디오',    cat: '외주', memo: '뮤직비디오 1편' },
+    { file: '제주도청-물정책과-홍보영상.md', name: '제주도청 물정책과 홍보영상', cat: '외주', memo: '홍보영상 2편' },
+    { file: '호끌락-문화학교.md',           name: '호끌락 문화학교',           cat: '외주', memo: '8주 (5/14~7/9)' },
+    { file: '잇수다-잡지-제작.md',          name: '잇수다 잡지 제작',          cat: '외주', memo: '취재 4~5건' },
+    { file: '외주-과정-실시간콘텐츠.md',    name: '외주 과정 실시간 콘텐츠',   cat: '자체', memo: 'SNS 병행' },
+    { file: '스트롤-독립잡지-교토편.md',    name: '스트롤 독립잡지',           cat: '자체', memo: '뉴스레터 분할' },
+    { file: '시스템 구축.md',               name: '개인 운영 시스템 구축',     cat: '시스템', memo: '' }
+  ];
+
+  const SCHEDULE = [
+    { date: '5/14', day: '목', dotCls: 'done',
+      events: [{ title: '호끌락 문화학교 — 1주차', time: '10:50–13:00', desc: '조별 공간 촬영 완료', clients: ['호끌락'], isDone: true }] },
+    { date: '5/18', day: '월', dotCls: 'upcoming', thisWeek: true,
+      events: [{ title: '하례초 킥오프 미팅', time: '14:00', clients: ['하례초'], isMeeting: true }] },
+    { date: '5/21', day: '목', thisWeek: true,
+      events: [{ title: '아르코건축예술랩 줌미팅', time: '17:00', clients: ['아르코'], isMeeting: true }] },
+    { date: '5/23', day: '토', dotCls: '', thisWeek: true,
+      events: [{ title: '하례초 — 컨셉·기획안 확정', time: '', clients: ['하례초'], prep: '기획안 제출' }] },
+    { date: '5/26', day: '화',
+      events: [{ title: '하례초 — 스토리보드 완성', time: '', clients: ['하례초'] }] },
+    { date: '5/28', day: '목',
+      events: [
+        { title: '호끌락 문화학교 — 2주차', time: '미정', clients: ['호끌락'], prep: '콘텐츠 확정·동의 필요' },
+        { title: '하례초 — 촬영', time: '미정', clients: ['하례초'] }
+      ] },
+    { date: '6/4',  day: '목',
+      events: [{ title: '호끌락 문화학교 — 3주차', time: '미정', clients: ['호끌락'] }] },
+    { date: '6/5',  day: '금',
+      events: [{ title: '하례초 — 편집 1차', time: '', clients: ['하례초'] }] },
+    { date: '6/10', day: '수',
+      events: [{ title: '하례초 — 클라이언트 검수', time: '', clients: ['하례초'], isMeeting: true }] },
+    { date: '6/17', day: '수',
+      events: [{ title: '하례초 — 최종 수정', time: '', clients: ['하례초'] }] },
+    { date: '6/20', day: '토',
+      events: [{ title: '하례초 — 납품 마감', time: '', clients: ['하례초'], prep: '최종 납품' }] },
+    { date: 'TBD',  day: '',
+      events: [{ title: '잇수다 남은 촬영 2건', time: '미정', desc: '용천수 잠복취재 · 제주도청 과장님 인터뷰', clients: ['잇수다'], isTbd: true }] }
+  ];
+
+  function daysUntil(s) {
+    if (!s) return null;
+    try { return Math.ceil((new Date(s+'T00:00:00') - new Date(new Date().toDateString())) / 86400000); }
+    catch(e) { return null; }
+  }
+  function ddayLabel(n) { return n===null?null:n<0?`D+${Math.abs(n)}`:n===0?'D-DAY':`D-${n}`; }
+  function ddayClass(n)  { return n===null?'dday-ok':n<=3?'dday-urgent':n<=10?'dday-warn':'dday-ok'; }
+  function badgeClass(c) { return c==='외주'?'badge-out':c==='자체'?'badge-self':'badge-sys'; }
+
+  function fmtBudget(b) {
+    if (!b) return null;
+    const gross = b.amount / 10000;
+    let label = gross.toLocaleString() + '만원';
+    if (b.vatSep) label += ' (VAT별도)';
+    if (b.deduction) {
+      const ded = b.deduction.amount / 10000;
+      const net = gross - ded;
+      label += ` · 실수령 ${net.toLocaleString()}만원 (${b.deduction.label} -${ded}만)`;
+    }
+    return label;
+  }
+
+  function riskLevel(p) {
+    const d = DATA[p.file]||{};
+    const deadline = d.meta&&d.meta.deadline;
+    const dLeft = deadline ? daysUntil(deadline) : null;
+    const total = (d.todos&&d.todos.length||0) + (d.done||0);
+    const pct   = total > 0 ? (d.done||0)/total : 0;
+    if (dLeft !== null && dLeft < 0) return 'overdue';
+    if (dLeft !== null && dLeft <= 14 && pct < 0.5) return 'critical';
+    if (dLeft !== null && dLeft <= 28 && pct < 0.35) return 'warning';
+    if (!deadline && (d.todos&&d.todos.length||0) > 12) return 'watch';
+    return dLeft !== null ? 'ok' : 'none';
+  }
+  function riskReason(p) {
+    const d = DATA[p.file]||{};
+    const deadline = d.meta&&d.meta.deadline;
+    const dLeft = deadline ? daysUntil(deadline) : null;
+    const total = (d.todos&&d.todos.length||0) + (d.done||0);
+    const pct   = total > 0 ? Math.round((d.done||0)/total*100) : 0;
+    if (!deadline) return '마감 미설정 · 할 일 ' + (d.todos&&d.todos.length||0) + '개';
+    return `D-${dLeft} · 완료 ${pct}%`;
+  }
+
+  function renderWeekPulse() {
+    const thisWeekEvents = SCHEDULE.filter(s => s.thisWeek);
+    const evCount = thisWeekEvents.reduce((acc, s) => acc + s.events.length, 0);
+    const critical = PROJECTS.filter(p => riskLevel(p)==='critical'||riskLevel(p)==='overdue');
+    const warning  = PROJECTS.filter(p => riskLevel(p)==='warning');
+    const deadlines = PROJECTS.filter(p => {
+      const d = DATA[p.file]||{};
+      const dl = d.meta&&d.meta.deadline ? daysUntil(d.meta.deadline) : null;
+      return dl !== null && dl >= 0 && dl <= 30;
+    });
+    const nearest = deadlines.sort((a,b)=>{
+      return daysUntil((DATA[a.file]?.meta?.deadline)||'9999-12-31') - daysUntil((DATA[b.file]?.meta?.deadline)||'9999-12-31');
+    })[0];
+    const nearestDays = nearest ? daysUntil(DATA[nearest.file]?.meta?.deadline) : null;
+
+    // 총 예산 합산
+    const totalBudget = Object.values(DATA)
+      .filter(d => d.budget)
+      .reduce((sum, d) => sum + d.budget.amount, 0);
+
+    document.getElementById('week-pulse-wrap').innerHTML = `
+      <div class="section-label">이번 주 현황</div>
+      <div class="week-pulse" style="margin-bottom:22px;">
+        <div class="pulse-stat">
+          <div class="pulse-val ${evCount>=3?'amber':''}">${evCount}</div>
+          <div class="pulse-lbl">이번 주 일정</div>
+        </div>
+        <div class="pulse-divider"></div>
+        <div class="pulse-stat">
+          <div class="pulse-val ${critical.length>0?'red':warning.length>0?'amber':'green'}">${critical.length+warning.length}</div>
+          <div class="pulse-lbl">주의 프로젝트</div>
+        </div>
+        <div class="pulse-divider"></div>
+        <div class="pulse-stat">
+          <div class="pulse-val ${nearestDays!==null&&nearestDays<=14?'amber':''}">${nearestDays!==null?'D-'+nearestDays:'—'}</div>
+          <div class="pulse-lbl">가장 가까운 마감</div>
+        </div>
+        <div class="pulse-divider"></div>
+        <div class="pulse-stat">
+          <div class="pulse-val" style="font-size:16px;padding-top:2px;">${(totalBudget/10000).toLocaleString()}만</div>
+          <div class="pulse-lbl">진행 중 총 예산</div>
+        </div>
+      </div>`;
+  }
+
+  function renderRisk() {
+    const critical = PROJECTS.filter(p => { const r=riskLevel(p); return r==='critical'||r==='overdue'; });
+    const warning  = PROJECTS.filter(p => riskLevel(p)==='warning');
+    const watch    = PROJECTS.filter(p => riskLevel(p)==='watch');
+    let html = '';
+    if (critical.length) {
+      html += `<div class="risk-banner critical">
+        <div class="risk-label">🔴 즉시 점검 필요</div>
+        ${critical.map(p=>`<div class="risk-row">
+          <div><span class="risk-name">${p.name}</span><span class="risk-reason" style="margin-left:8px;">${riskReason(p)}</span></div>
+          <span class="risk-tag tag-critical">위험</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    if (warning.length) {
+      html += `<div class="risk-banner warning">
+        <div class="risk-label">🟡 주의 모니터링</div>
+        ${warning.map(p=>`<div class="risk-row">
+          <div><span class="risk-name">${p.name}</span><span class="risk-reason" style="margin-left:8px;">${riskReason(p)}</span></div>
+          <span class="risk-tag tag-warning">주의</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    if (watch.length) {
+      html += `<div class="risk-banner" style="background:#f9f9f9;border:1px solid #e8e8e8;">
+        <div class="risk-label" style="color:#666;">⚪ 마감 확인 필요</div>
+        ${watch.map(p=>`<div class="risk-row">
+          <div><span class="risk-name">${p.name}</span><span class="risk-reason" style="margin-left:8px;">${riskReason(p)}</span></div>
+          <span class="risk-tag tag-watch">일정 미정</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    document.getElementById('risk-wrap').innerHTML = html ? `<div style="margin-bottom:22px;">${html}</div>` : '';
+  }
+
+  function renderUrgency() {
+    const urgent = PROJECTS.filter(p => {
+      const m = DATA[p.file]?.meta||{}, date = m.deadline||m.start;
+      if (!date) return false;
+      const d = daysUntil(date); return d!==null && d<=14;
+    });
+    if (!urgent.length) { document.getElementById('urgency-wrap').innerHTML=''; return; }
+    const rows = urgent.map(p => {
+      const m=DATA[p.file]?.meta||{}, date=m.deadline||m.start, d=daysUntil(date);
+      const rem=(DATA[p.file]?.todos||[]).length;
+      return `<div class="urgency-row"><div class="urgency-name">${p.name}</div>
+        <div class="urgency-right">${rem>0?`<span class="remaining-txt">할 일 ${rem}개</span>`:''}
+        <span class="dday ${ddayClass(d)}">${ddayLabel(d)}</span></div></div>`;
+    }).join('');
+    document.getElementById('urgency-wrap').innerHTML =
+      `<div class="urgency-card"><div class="urgency-label">⏰ D-14 이내 주의</div>${rows}</div>`;
+  }
+
+  function renderSchedule() {
+    const rows = SCHEDULE.map((day, i) => {
+      const isLast = i === SCHEDULE.length - 1;
+      const dotCls = day.dotCls || (day.thisWeek ? 'thisweek' : '');
+      const eventsHTML = day.events.map(ev => {
+        const clientTags = (ev.clients||[]).map(c=>`<span class="ttag ttag-client">${c}</span>`).join('');
+        const typeTag = ev.isDone    ? `<span class="ttag ttag-done">✓ 완료</span>`
+                      : ev.isTbd    ? `<span class="ttag ttag-tbd">일정 미정</span>`
+                      : ev.isMeeting? `<span class="ttag ttag-meeting">미팅</span>`
+                      : day.thisWeek? `<span class="ttag ttag-thisweek">이번 주</span>`
+                      : `<span class="ttag ttag-shoot">촬영·작업</span>`;
+        const prepTag = ev.prep ? `<span class="ttag ttag-prep">⚡ ${ev.prep}</span>` : '';
+        const evCls = ev.isDone ? ' done-ev' : day.thisWeek ? ' thisweek-ev' : '';
+        return `<div class="timeline-event${evCls}">
+          <div class="timeline-event-top">${ev.time?`<span class="timeline-time">${ev.time}</span>`:''}<span class="timeline-title">${ev.title}</span></div>
+          ${ev.desc?`<div class="timeline-desc">${ev.desc}</div>`:''}
+          <div class="timeline-tags">${typeTag}${clientTags}${prepTag}</div></div>`;
+      }).join('');
+      return `<div class="timeline-day">
+        <div class="timeline-date"><div class="tdate">${day.date}</div>${day.day?`<div class="tday">${day.day}요일</div>`:''}</div>
+        <div class="timeline-dot-col"><div class="timeline-dot${dotCls?' '+dotCls:''}"></div>${!isLast?'<div class="timeline-line"></div>':''}</div>
+        <div class="timeline-body">${eventsHTML}</div></div>`;
+    }).join('');
+    return `<div class="section-label">촬영 · 미팅 · 마일스톤</div><div class="schedule-section" style="margin-bottom:24px;">${rows}</div>`;
+  }
+
+  function renderCard(p) {
+    const d = DATA[p.file]||{ todos:[], done:0, meta:{}, highlights:[], budget:null };
+    const tasks=d.todos||[], doneN=d.done||0, total=tasks.length+doneN;
+    const pct = total>0 ? Math.round((doneN/total)*100) : 0;
+    const date=d.meta&&d.meta.deadline, dd=daysUntil(date);
+    const hi = new Set(d.highlights||[]);
+    const rl = riskLevel(p);
+    const riskDotCls = rl==='critical'||rl==='overdue'?'critical':rl==='warning'?'warning':rl==='watch'?'watch':rl==='ok'?'ok':'none';
+    const fillCls = rl==='critical'||rl==='overdue'?'fill-critical':rl==='warning'?'fill-warning':'';
+    const cardCls = rl==='critical'||rl==='overdue'?'card-risk-critical':rl==='warning'?'card-risk-warning':'';
+    const taskHTML = tasks.length>0
+      ? `<ul class="task-list">
+          ${tasks.slice(0,5).map(t=>`<li class="task-item${hi.has(t)?' highlight':''}"><div class="task-box"></div><span>${t}</span></li>`).join('')}
+          ${tasks.length>5?`<li class="more-tasks">+ ${tasks.length-5}개 더</li>`:''}
+        </ul>`
+      : `<div class="no-tasks">✓ 현재 할 일 없음</div>`;
+    const fp=[];
+    if (p.memo) fp.push(p.memo);
+    if (date&&dd!==null) fp.push(`마감 ${date} · ${ddayLabel(dd)}`);
+    const budgetStr = fmtBudget(d.budget);
+    const budgetHTML = budgetStr
+      ? `<span class="budget-badge budget-${d.budget.status}" title="${budgetStr}">${(d.budget.amount/10000).toLocaleString()}만원${d.budget.vatSep?' +VAT':''}</span>`
+      : `<span class="budget-badge budget-none">예산 미입력</span>`;
+    return `<div class="card ${cardCls}">
+      <div class="card-top">
+        <div class="card-name">${p.name}</div>
+        <div class="card-badges">
+          <div class="risk-dot ${riskDotCls}" title="${rl}"></div>
+          <span class="badge ${badgeClass(p.cat)}">${p.cat}</span>
+        </div>
+      </div>
+      <div class="prog-track"><div class="prog-fill ${fillCls}" style="width:${pct}%"></div></div>
+      <div class="prog-text">${doneN}/${total} 완료 · ${pct}%</div>
+      ${taskHTML}
+      <div class="card-footer">
+        <span>${fp.join(' · ')}</span>
+        ${budgetHTML}
+      </div>
+    </div>`;
+  }
+
+  function render() {
+    renderWeekPulse();
+    renderRisk();
+    renderUrgency();
+    const section = (label, projs, wide) => `
+      <div class="section-label">${label}</div>
+      <div class="grid${wide?' wide':''}">
+        ${projs.map(p=>renderCard(p)).join('')}
+      </div>`;
+    document.getElementById('main-wrap').innerHTML =
+      renderSchedule() +
+      section('외주 프로젝트', PROJECTS.filter(p=>p.cat==='외주'), false) +
+      section('자체 프로젝트', PROJECTS.filter(p=>p.cat==='자체'), false) +
+      section('시스템 구축',   PROJECTS.filter(p=>p.cat==='시스템'), true);
+  }
+
+  render();
+</script>
+</body>
+</html>

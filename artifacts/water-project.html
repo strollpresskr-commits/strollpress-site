@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Water Project",
+  "schemaVersion": 1,
+  "description": "잇수다 9월호 × 제주도청 물정책과 프로젝트 관리 — 타임라인, 할일, 관계자, 파일 목록"
+}
+</script>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>잇수다 9월호 × 물정책과 프로젝트</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f2ee;
+    --card: #ffffff;
+    --border: #e5e2db;
+    --text: #1a1a1a;
+    --muted: #888;
+    --accent: #1d6fa4;
+    --accent-light: #e8f3fa;
+    --green: #22c55e;
+    --green-light: #f0fdf4;
+    --orange: #f97316;
+    --orange-light: #fff7ed;
+    --red: #ef4444;
+    --red-light: #fef2f2;
+    --purple: #8b5cf6;
+    --purple-light: #f5f3ff;
+    --yellow: #eab308;
+    --yellow-light: #fefce8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Apple SD Gothic Neo', sans-serif; background: var(--bg); color: var(--text); padding: 24px 20px 48px; min-height: 100vh; }
+
+  /* HEADER */
+  .header { margin-bottom: 24px; }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .project-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); background: var(--accent-light); padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
+  .project-title { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.2; }
+  .project-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .header-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .meta-chip { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--muted); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: var(--card); border-radius: 12px; padding: 4px; border: 1px solid var(--border); width: fit-content; }
+  .tab { font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: 8px; cursor: pointer; color: var(--muted); border: none; background: none; transition: all 0.15s; }
+  .tab.active { background: var(--accent); color: #fff; }
+  .tab:hover:not(.active) { background: var(--bg); color: var(--text); }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--card); border-radius: 16px; border: 1px solid var(--border); padding: 20px 22px; margin-bottom: 16px; }
+  .card-title { font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* TIMELINE */
+  .timeline { display: flex; flex-direction: column; }
+  .tl-item { display: flex; gap: 0; position: relative; }
+  .tl-item:not(:last-child) .tl-line { background: var(--border); }
+  .tl-left { width: 80px; flex-shrink: 0; text-align: right; padding-right: 16px; padding-top: 2px; }
+  .tl-date { font-size: 11px; font-weight: 700; color: var(--text); }
+  .tl-dow { font-size: 10px; color: var(--muted); }
+  .tl-middle { width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+  .tl-dot-wrap { width: 12px; height: 12px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 3px; }
+  .tl-line { width: 2px; flex: 1; min-height: 20px; margin: 2px 0; }
+  .tl-body { flex: 1; padding: 0 0 20px 12px; }
+  .tl-ev { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .tl-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+  .tl-tag { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 5px; padding: 2px 7px; margin-right: 4px; margin-bottom: 4px; }
+
+  /* STATUS CHIPS */
+  .status { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 6px; padding: 2px 8px; }
+  .s-done    { background: var(--green-light);  color: var(--green); }
+  .s-doing   { background: var(--accent-light); color: var(--accent); }
+  .s-todo    { background: #f5f5f4; color: #aaa; }
+  .s-urgent  { background: var(--red-light);    color: var(--red); }
+  .s-review  { background: var(--yellow-light); color: var(--yellow); }
+
+  /* TASK LIST */
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 10px; background: #fafaf8; border: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+  .task-item:hover { background: #f0f0ee; }
+  .task-check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--border); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .task-check.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .task-check.doing { background: var(--accent); border-color: var(--accent); color: #fff; font-size: 9px; }
+  .task-info { flex: 1; }
+  .task-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .task-name.done-text { text-decoration: line-through; color: var(--muted); }
+  .task-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .task-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .task-due { font-size: 10px; font-weight: 600; color: var(--muted); }
+  .task-due.urgent { color: var(--red); }
+
+  /* SECTION HEADERS */
+  .section-header { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin: 20px 0 8px; padding: 0 2px; }
+  .section-header:first-child { margin-top: 0; }
+
+  /* CONTACTS */
+  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .contact-card { padding: 14px 16px; border-radius: 12px; background: #fafaf8; border: 1px solid var(--border); }
+  .contact-role { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .contact-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .contact-org { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .contact-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .ctag { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 5px; background: var(--accent-light); color: var(--accent); }
+  .ctag.green { background: var(--green-light); color: #16a34a; }
+  .ctag.purple { background: var(--purple-light); color: var(--purple); }
+  .ctag.orange { background: var(--orange-light); color: var(--orange); }
+
+  /* FILES */
+  .file-tree { display: flex; flex-direction: column; gap: 4px; }
+  .folder { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .folder-header { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #fafaf8; cursor: pointer; font-size: 13px; font-weight: 600; user-select: none; }
+  .folder-header:hover { background: #f0f0ee; }
+  .folder-icon { font-size: 14px; }
+  .folder-count { font-size: 10px; font-weight: 600; color: var(--muted); margin-left: auto; background: var(--border); padding: 2px 7px; border-radius: 10px; }
+  .folder-chevron { font-size: 10px; color: var(--muted); transition: transform 0.2s; }
+  .folder-chevron.open { transform: rotate(90deg); }
+  .folder-body { display: none; padding: 6px 8px; border-top: 1px solid var(--border); background: #fff; }
+  .folder-body.open { display: block; }
+  .file-item { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px; font-size: 12px; color: var(--text); }
+  .file-item:hover { background: var(--bg); }
+  .file-icon { font-size: 13px; flex-shrink: 0; }
+  .file-name { flex: 1; }
+  .file-ext { font-size: 10px; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+
+  /* PROGRESS BAR */
+  .progress-wrap { margin-top: 8px; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+  .progress-bar { height: 5px; background: var(--border); border-radius: 5px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 5px; }
+
+  /* SUMMARY CARDS */
+  .summary-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .sum-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .sum-num { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; }
+  .sum-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* URGENCY BANNER */
+  .urgency-banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--red-light); border: 1px solid #fecaca; border-radius: 12px; margin-bottom: 16px; }
+  .urgency-icon { font-size: 18px; }
+  .urgency-text { font-size: 13px; font-weight: 600; color: var(--red); }
+  .urgency-sub { font-size: 11px; color: #f87171; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="project-badge">제주도청 물정책과 협업</div>
+      <div class="project-title">잇수다 9월호 — 물 특집</div>
+      <div class="project-sub">제주지하수연구센터 × STROLL PRESS · 2026년 9월 발행 예정</div>
+    </div>
+    <div class="header-meta">
+      <div class="meta-chip">📅 발행 D-<span id="dday">계산중</span></div>
+      <div class="meta-chip">📁 잇수다 9월호_2026</div>
+      <div class="meta-chip" style="color:#1d6fa4; border-color:#bfdbfe;">🚨 수요일 도청 인터뷰</div>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="summary-row">
+  <div class="sum-card"><div class="sum-num">7</div><div class="sum-label">콘텐츠 섹션</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--red)">2</div><div class="sum-label">긴급 취재 미완료</div></div>
+  <div class="sum-card"><div class="sum-num" style="color:var(--accent)">5/20</div><div class="sum-label">도청 인터뷰</div></div>
+  <div class="sum-card"><div class="sum-num">5</div><div class="sum-label">주요 관계자</div></div>
+</div>
+
+<!-- URGENCY -->
+<div class="urgency-banner">
+  <div class="urgency-icon">⚡</div>
+  <div>
+    <div class="urgency-text">수요일(5/20) 11시 — 도청 물정책과 인터뷰</div>
+    <div class="urgency-sub">남윤님과 공동업로드 비용 · 관정/도섭 스케줄 사전 확인 필요</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('timeline')">📅 타임라인</button>
+  <button class="tab" onclick="switchTab('tasks')">✅ 할 일</button>
+  <button class="tab" onclick="switchTab('contacts')">👥 관계자</button>
+  <button class="tab" onclick="switchTab('files')">📁 파일</button>
+</div>
+
+<!-- ══ 타임라인 ══ -->
+<div id="sec-timeline" class="section active">
+  <div class="card">
+    <div class="card-title">프로젝트 타임라인</div>
+    <div class="timeline">
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">4/17</div><div class="tl-dow">목</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:var(--green);width:12px;height:12px;border-radius:50%;margin-top:3px;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev">초기 기획 수립</div>
+          <div class="tl-desc">일정표 v1 작성 (일정_잇수다9호_260417)</div>
+          <span class="status s-done">완료</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">4/23</div><div class="tl-dow">목</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:var(--green);width:12px;height:12px;border-radius:50%;margin-top:3px;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev">목차 초안 작성</div>
+          <div class="tl-desc">_목차_잇수다9호_260423</div>
+          <span class="status s-done">완료</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">4/30</div><div class="tl-dow">목</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:var(--green);width:12px;height:12px;border-radius:50%;margin-top:3px;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev">목차 수정</div>
+          <div class="tl-desc">수정_목차_잇수다9호_260430</div>
+          <span class="status s-done">완료</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">5/7</div><div class="tl-dow">목</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:var(--green);width:12px;height:12px;border-radius:50%;margin-top:3px;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev">목차 V2 · 취재리스트 확정</div>
+          <div class="tl-desc">V2_목차_잇수다9호_260507 · 취재리스트_260507</div>
+          <span class="status s-done">완료</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">5/11</div><div class="tl-dow">일</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:var(--green);width:12px;height:12px;border-radius:50%;margin-top:3px;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev">연구자 인터뷰 진행</div>
+          <div class="tl-desc">인터뷰_김일환·김용석_260511 / 한국수자원학회_김시은_260511</div>
+          <span class="status s-done">완료</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date" style="color:var(--red);font-weight:800;">5/20</div><div class="tl-dow" style="color:var(--red);">수</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:var(--red);width:14px;height:14px;border-radius:50%;margin-top:3px;box-shadow:0 0 0 3px #fecaca;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev" style="color:var(--red);">🎤 도청 물정책과장님 인터뷰</div>
+          <div class="tl-desc">오전 11시 · 제주도청 방문 / 질문지 기준성 검토 완료</div>
+          <span class="status s-urgent">D-2 긴급</span>
+          <span class="tl-tag" style="background:var(--purple-light);color:var(--purple);">명효님 미팅 14시</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">6월</div><div class="tl-dow">초</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:#ddd;width:12px;height:12px;border-radius:50%;margin-top:3px;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev">관정/도섭 현장 조사</div>
+          <div class="tl-desc">남윤님과 스케줄 협의 중</div>
+          <span class="status s-todo">미정</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">7월</div><div class="tl-dow">말</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:#ddd;width:12px;height:12px;border-radius:50%;margin-top:3px;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev">원고 마감</div>
+          <div class="tl-desc">전 섹션 원고 수집 · 편집 완료 목표</div>
+          <span class="status s-todo">예정</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">8월</div><div class="tl-dow">말</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:#ddd;width:12px;height:12px;border-radius:50%;margin-top:3px;"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev">인쇄 교정</div>
+          <div class="tl-desc">페이지배열표 최종본 기준 교정</div>
+          <span class="status s-todo">예정</span>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-left"><div class="tl-date">9월</div><div class="tl-dow">발행</div></div>
+        <div class="tl-middle">
+          <div class="tl-dot-wrap" style="background:var(--accent);width:14px;height:14px;border-radius:50%;margin-top:3px;"></div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-ev" style="color:var(--accent);">🎉 잇수다 9월호 발행</div>
+          <div class="tl-desc">공동 업로드 배포 포함</div>
+          <span class="status s-doing">목표</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ 할 일 ══ -->
+<div id="sec-tasks" class="section">
+
+  <div class="section-header">🚨 즉시 처리</div>
+  <div class="card" style="border-color:#fecaca;">
+    <div class="task-list">
+      <div class="task-item">
+        <div class="task-check doing">→</div>
+        <div class="task-info">
+          <div class="task-name">도청 인터뷰 최종 준비 (5/20 11시)</div>
+          <div class="task-meta">질문지 완성 확인 · 남윤님과 11시 가능 여부 최종 확인</div>
+        </div>
+        <div class="task-right">
+          <div class="task-due urgent">D-2</div>
+          <span class="status s-urgent">긴급</span>
+        </div>
+      </div>
+      <div class="task-item">
+        <div class="task-check doing">→</div>
+        <div class="task-info">
+          <div class="task-name">남윤님 연락 (오늘 오후)</div>
+          <div class="task-meta">① 공동 업로드 비용 ② 관정/도섭 조사 스케줄 ③ 도청 11시 확인</div>
+        </div>
+        <div class="task-right">
+          <div class="task-due urgent">오늘</div>
+          <span class="status s-urgent">긴급</span>
+        </div>
+      </div>
+      <div class="task-item">
+        <div class="task-check doing">→</div>
+        <div class="task-info">
+          <div class="task-name">김현아 주무관 연락 (오늘 오전)</div>
+          <div class="task-meta">① 마감 관련 ② 섭외 관련</div>
+        </div>
+        <div class="task-right">
+          <div class="task-due urgent">오늘</div>
+          <span class="status s-urgent">긴급</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">📝 취재/원고</div>
+  <div class="card">
+    <div class="task-list">
+      <div class="task-item">
+        <div class="task-check done">✓</div>
+        <div class="task-info">
+          <div class="task-name done-text">[REPORT] 김용석 연구노트 수령</div>
+          <div class="task-meta">1.연구노트_김용석_260427.hwp</div>
+        </div>
+        <div class="task-right"><span class="status s-done">완료</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check done">✓</div>
+        <div class="task-info">
+          <div class="task-name done-text">[REPORT] 김일환 연구노트 수령</div>
+          <div class="task-meta">제주물 세계포럼_연구노트 / 한국지하수토양환경학회 춘계</div>
+        </div>
+        <div class="task-right"><span class="status s-done">완료</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check done">✓</div>
+        <div class="task-info">
+          <div class="task-name done-text">[REPORT] 김시은 수자원학회 원고 수령</div>
+          <div class="task-meta">한국수자원학회_김시은_260511.pdf</div>
+        </div>
+        <div class="task-right"><span class="status s-done">완료</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check done">✓</div>
+        <div class="task-info">
+          <div class="task-name done-text">[REPORT] 김일환·김용석 인터뷰 진행</div>
+          <div class="task-meta">인터뷰_ 김일환, 김용석_260511.hwp</div>
+        </div>
+        <div class="task-right"><span class="status s-done">완료</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check doing">→</div>
+        <div class="task-info">
+          <div class="task-name">[FOCUS] 도 물정책과장님 인터뷰</div>
+          <div class="task-meta">5/20 11시 도청 방문 · 질문지 준비 완료</div>
+        </div>
+        <div class="task-right"><span class="status s-doing">진행 중</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-info">
+          <div class="task-name">[CULTURE] 용천수 썰록 원고 수령</div>
+          <div class="task-meta">05 [CULTURE] 용천수 썰록 — 원고 미확인</div>
+        </div>
+        <div class="task-right"><span class="status s-todo">예정</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-info">
+          <div class="task-name">[FOCUS] 관정/도섭 현장 조사 및 촬영</div>
+          <div class="task-meta">남윤님과 일정 조율 필요</div>
+        </div>
+        <div class="task-right"><span class="status s-todo">미정</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-info">
+          <div class="task-name">검섯개물 사진 선별 및 편집</div>
+          <div class="task-meta">물 관련 자료/검섯개물 — JPG 11장</div>
+        </div>
+        <div class="task-right"><span class="status s-todo">예정</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">🎨 편집/디자인</div>
+  <div class="card">
+    <div class="task-list">
+      <div class="task-item">
+        <div class="task-check doing">→</div>
+        <div class="task-info">
+          <div class="task-name">페이지배열표 V2 업데이트</div>
+          <div class="task-meta">V2_잇수다 9호_페이지배열표_v1_0413.xlsx 기반</div>
+        </div>
+        <div class="task-right"><span class="status s-doing">진행 중</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-info">
+          <div class="task-name">표지 디자인 확정</div>
+          <div class="task-meta">00 표지_앞뒤표지_제호_판권 / 잇수다_제호.ai</div>
+        </div>
+        <div class="task-right"><span class="status s-todo">예정</span></div>
+      </div>
+      <div class="task-item">
+        <div class="task-check"></div>
+        <div class="task-info">
+          <div class="task-name">전 섹션 조판 완료</div>
+          <div class="task-meta">7개 섹션 InDesign 작업</div>
+        </div>
+        <div class="task-right"><span class="status s-todo">예정</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══ 관계자 ══ -->
+<div id="sec-contacts" class="section">
+  <div class="section-header">🏢 도청 / 기관</div>
+  <div class="contact-grid">
+    <div class="contact-card" style="border-color:#bfdbfe; background:var(--accent-light);">
+      <div class="contact-role">인터뷰 대상</div>
+      <div class="contact-name">물정책과장님</div>
+      <div class="contact-org">제주특별자치도 물정책과</div>
+      <div class="contact-tags">
+        <span class="ctag">5/20 인터뷰</span>
+        <span class="ctag">질문지 완성</span>
+      </div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-role">담당 주무관</div>
+      <div class="contact-name">김현아 주무관</div>
+      <div class="contact-org">제주도청 물정책과</div>
+      <div class="contact-tags">
+        <span class="ctag orange">오늘 연락 필요</span>
+        <span class="ctag">마감·섭외 확인</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">🔬 제주지하수연구센터</div>
+  <div class="contact-grid">
+    <div class="contact-card">
+      <div class="contact-role">연구원 — REPORT 섹션</div>
+      <div class="contact-name">김용석</div>
+      <div class="contact-org">제주지하수연구센터</div>
+      <div class="contact-tags">
+        <span class="ctag green">인터뷰 완료</span>
+        <span class="ctag green">연구노트 수령</span>
+      </div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-role">연구원 — REPORT 섹션</div>
+      <div class="contact-name">김일환</div>
+      <div class="contact-org">제주지하수연구센터</div>
+      <div class="contact-tags">
+        <span class="ctag green">인터뷰 완료</span>
+        <span class="ctag green">연구노트 수령</span>
+      </div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-role">연구원 — REPORT 섹션</div>
+      <div class="contact-name">김시은</div>
+      <div class="contact-org">제주지하수연구센터</div>
+      <div class="contact-tags">
+        <span class="ctag green">원고 수령</span>
+        <span class="ctag">수자원학회</span>
+      </div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-role">인터뷰이 — 녹취</div>
+      <div class="contact-name">고인옥</div>
+      <div class="contact-org">수산1리</div>
+      <div class="contact-tags">
+        <span class="ctag green">녹취 완료</span>
+        <span class="ctag">용천수</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-header">🤝 협업</div>
+  <div class="contact-grid">
+    <div class="contact-card" style="border-color:#fde68a;">
+      <div class="contact-role">협업 파트너</div>
+      <div class="contact-name">남윤님</div>
+      <div class="contact-org">협업</div>
+      <div class="contact-tags">
+        <span class="ctag orange">오늘 연락 필요</span>
+        <span class="ctag">공동업로드</span>
+        <span class="ctag">관정/도섭</span>
+      </div>
+    </div>
+    <div class="contact-card">
+      <div class="contact-role">미팅</div>
+      <div class="contact-name">명효님</div>
+      <div class="contact-org">—</div>
+      <div class="contact-tags">
+        <span class="ctag purple">5/20 14시 미팅</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 파일 ══ -->
+<div id="sec-files" class="section">
+  <div class="card">
+    <div class="card-title">로컬 폴더 — 잇수다 9월호_2026</div>
+    <div class="file-tree">
+
+      <div class="folder">
+        <div class="folder-header" onclick="toggleFolder(this)">
+          <span class="folder-chevron open">▶</span>
+          <span class="folder-icon">📋</span>
+          기획_일정
+          <span class="folder-count">4개</span>
+        </div>
+        <div class="folder-body open">
+          <div class="file-item"><span class="file-icon">📄</span><span class="file-name">V2_목차_잇수다9호_260507_스트롤</span><span class="file-ext">docx</span></div>
+          <div class="file-item"><span class="file-icon">📄</span><span class="file-name">취재리스트_잇수다9호_260507_스트롤</span><span class="file-ext">docx</span></div>
+          <div class="file-item" style="opacity:0.5;"><span class="file-icon">📂</span><span class="file-name">이전기획 (v1 초안들)</span><span class="file-ext">3개</span></div>
+        </div>
+      </div>
+
+      <div class="folder">
+        <div class="folder-header" onclick="toggleFolder(this)">
+          <span class="folder-chevron">▶</span>
+          <span class="folder-icon">📊</span>
+          페이지배열표
+          <span class="folder-count">2개</span>
+        </div>
+        <div class="folder-body">
+          <div class="file-item"><span class="file-icon">📊</span><span class="file-name">V2_잇수다 9호_페이지배열표_v1_0413</span><span class="file-ext">xlsx</span></div>
+        </div>
+      </div>
+
+      <div class="folder">
+        <div class="folder-header" onclick="toggleFolder(this)">
+          <span class="folder-chevron">▶</span>
+          <span class="folder-icon">✏️</span>
+          인터뷰_도 물정책과장님
+          <span class="folder-count" style="background:var(--red-light);color:var(--red);">D-2</span>
+        </div>
+        <div class="folder-body">
+          <div class="file-item"><span class="file-icon">📝</span><span class="file-name">인터뷰_도 물정책과장님_질문지</span><span class="file-ext">docx</span></div>
+          <div class="file-item"><span class="file-icon">📝</span><span class="file-name">인터뷰_ 도 물정책과장님</span><span class="file-ext">hwp</span></div>
+        </div>
+      </div>
+
+      <div class="folder">
+        <div class="folder-header" onclick="toggleFolder(this)">
+          <span class="folder-chevron">▶</span>
+          <span class="folder-icon">🔬</span>
+          제주지하수연구센터 원고
+          <span class="folder-count">7섹션</span>
+        </div>
+        <div class="folder-body">
+          <div class="file-item"><span class="file-icon">📝</span><span class="file-name">00 표지 · 앞뒤표지_제호_판권</span><span class="file-ext">ai</span></div>
+          <div class="file-item"><span class="file-icon">📝</span><span class="file-name">01 [CONTENTS] 목차</span><span class="file-ext">hwp</span></div>
+          <div class="file-item"><span class="file-icon">📝</span><span class="file-name">02 [INTRO] 들어가며_푸른 log</span><span class="file-ext">hwp</span></div>
+          <div class="file-item" style="opacity:0.5;"><span class="file-icon">📁</span><span class="file-name">03 [FOCUS] 물과생활_용천수 공간실험</span><span class="file-ext">—</span></div>
+          <div class="file-item"><span class="file-icon">📝</span><span class="file-name">04 [REPORT] 연구리포트 (5개 파일)</span><span class="file-ext">hwp/pdf</span></div>
+          <div class="file-item" style="opacity:0.5;"><span class="file-icon">📁</span><span class="file-name">05 [CULTURE] 용천수 썰록</span><span class="file-ext">—</span></div>
+          <div class="file-item"><span class="file-icon">📝</span><span class="file-name">06 [LIFE] 우리 곁의 모든 물 이야기</span><span class="file-ext">hwp</span></div>
+          <div class="file-item"><span class="file-icon">📝</span><span class="file-name">07 [RESEARCH] 센터소식</span><span class="file-ext">hwp</span></div>
+        </div>
+      </div>
+
+      <div class="folder">
+        <div class="folder-header" onclick="toggleFolder(this)">
+          <span class="folder-chevron">▶</span>
+          <span class="folder-icon">🖼️</span>
+          물 관련 자료
+          <span class="folder-count">사진+녹취</span>
+        </div>
+        <div class="folder-body">
+          <div class="file-item"><span class="file-icon">📷</span><span class="file-name">검섯개물 현장사진 (조천읍 북촌리)</span><span class="file-ext">JPG ×11</span></div>
+          <div class="file-item"><span class="file-icon">📄</span><span class="file-name">녹취록 본문_수산1리 고인옥</span><span class="file-ext">pdf</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="progress-wrap" style="margin-top:16px;">
+      <div class="progress-label"><span>원고 수집 진행률</span><span>5/7 섹션</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:71%"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${name}')"]`).classList.add('active');
+  document.getElementById(`sec-${name}`).classList.add('active');
+}
+
+function toggleFolder(header) {
+  const chevron = header.querySelector('.folder-chevron');
+  const body = header.nextElementSibling;
+  chevron.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// D-Day 계산
+(function() {
+  const target = new Date('2026-09-01');
+  const today = new Date();
+  const diff = Math.ceil((target - today) / (1000*60*60*24));
+  document.getElementById('dday').textContent = diff;
+})();
+</script>
+</body>
+</html>

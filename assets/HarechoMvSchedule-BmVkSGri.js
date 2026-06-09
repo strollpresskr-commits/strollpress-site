@@ -1,0 +1,1 @@
+import{j as e}from"./index-RUukQnaj.js";function o(){return e.jsx("iframe",{src:"/artifacts/hareecho-mv-schedule.html",style:{width:"100%",height:"100%",border:"none",display:"block",position:"absolute",inset:0},title:"Hareecho MV Schedule"})}export{o as default};

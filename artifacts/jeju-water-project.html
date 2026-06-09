@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Jeju Water Project",
+  "schemaVersion": 1,
+  "description": "제주 물정책 홍보영상 프로젝트 PM 대시보드 — 촬영 3일 동선(DAY1 동쪽·DAY2 제주시·DAY3 서쪽), 프리프로덕션 체크리스트(체크 상태 저장), 간트 타임라인, 포스트프로덕션 마일스톤, 연락처 디렉토리, 리스크 등록부 포함. 마감 6월 26일 기준 D-Day 자동 계산."
+}
+</script>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제주 물정책 홍보영상 프로젝트</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --bg2: #f8f9fa; --bg3: #f1f3f5;
+  --border: #dee2e6; --text: #1c1c1e; --text2: #3c3c43; --text3: #8e8e93;
+  --blue: #2563eb; --blue-l: #dbeafe;
+  --purple: #7c3aed; --purple-l: #ede9fe;
+  --green: #059669; --green-l: #d1fae5;
+  --orange: #ea580c; --orange-l: #ffedd5;
+  --red: #dc2626; --red-l: #fee2e2;
+  --yellow: #d97706; --yellow-l: #fef3c7;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); padding: 20px; font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 860px; margin: 0 auto; }
+
+/* Header */
+.hdr { background: #111; color: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.hdr-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.hdr-sub { font-size: 12px; opacity: .65; }
+.hdr-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.hdr-pill { background: rgba(255,255,255,.12); border-radius: 4px; padding: 2px 9px; font-size: 11px; }
+.deadline-box { background: rgba(255,255,255,.1); border-radius: 8px; padding: 12px 16px; text-align: center; white-space: nowrap; }
+.deadline-num { font-size: 30px; font-weight: 800; line-height: 1; }
+.deadline-lbl { font-size: 11px; opacity: .65; margin-top: 3px; }
+.deadline-date { font-size: 11px; opacity: .5; margin-top: 4px; }
+
+/* Summary */
+.sum-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.sum-c { flex: 1; min-width: 100px; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px 12px; background: var(--bg2); }
+.sum-lbl { font-size: 10px; color: var(--text3); font-weight: 500; margin-bottom: 3px; }
+.sum-val { font-size: 16px; font-weight: 700; line-height: 1.2; }
+.sum-sub { font-size: 10px; color: var(--text3); }
+
+/* Section */
+.sec { margin-bottom: 26px; }
+.sec-hdr { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 10px; }
+
+/* Gantt */
+.gantt { background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.gantt-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.gantt-legend span { font-size: 11px; display: flex; align-items: center; gap: 4px; }
+.gantt-legend i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; }
+.gantt-track { position: relative; height: 28px; background: var(--bg3); border-radius: 5px; overflow: hidden; margin-bottom: 4px; }
+.gbar { position: absolute; top: 3px; height: 22px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; overflow: hidden; white-space: nowrap; padding: 0 4px; }
+.g-pre { background: var(--yellow); left: 0%; width: 9.76%; }
+.g-shoot { background: var(--blue); left: 9.76%; width: 19.51%; }
+.g-edit { background: var(--purple); left: 29.27%; width: 53.66%; }
+.g-review { background: var(--green); left: 82.93%; width: 14.64%; }
+.g-deliver { background: var(--red); left: 99%; width: 1%; }
+.g-today { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); opacity: .7; z-index: 10; }
+.gantt-dates { display: flex; justify-content: space-between; font-size: 10px; color: var(--text3); margin-bottom: 6px; }
+.gantt-markers { position: relative; height: 24px; }
+.gmark { position: absolute; transform: translateX(-50%); font-size: 9px; font-weight: 700; text-align: center; line-height: 1.2; }
+
+/* Checklist */
+.checklist { background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px; padding: 4px 8px 8px; }
+.ck-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 6px; border-radius: 6px; cursor: pointer; }
+.ck-item:hover { background: var(--bg3); }
+.ck-item input { margin-top: 2px; accent-color: var(--blue); width: 15px; height: 15px; flex-shrink: 0; cursor: pointer; }
+.ck-item.done .ck-text { text-decoration: line-through; color: var(--text3); }
+.ck-text { font-size: 13px; font-weight: 500; }
+.ck-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+.ck-badge { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+.ck-now { background: var(--red-l); color: var(--red); }
+.ck-week { background: var(--yellow-l); color: var(--yellow); }
+.prog-wrap { padding: 8px 6px 4px; }
+.prog-bar-bg { background: var(--bg3); border-radius: 4px; height: 6px; }
+.prog-bar-fill { height: 100%; background: var(--blue); border-radius: 4px; transition: width .3s; }
+.prog-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+
+/* Cards */
+.card { border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+.card-hdr { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--bg2); cursor: pointer; user-select: none; }
+.card-hdr:hover { background: var(--bg3); }
+.cbadge { font-size: 11px; font-weight: 700; border-radius: 5px; padding: 2px 9px; color: #fff; flex-shrink: 0; }
+.bd1 { background: #2563eb; } .bd2 { background: #7c3aed; } .bd3 { background: #059669; }
+.card-title { font-size: 13px; font-weight: 600; flex: 1; }
+.card-meta { font-size: 11px; color: var(--text3); }
+.chevron { color: var(--text3); margin-left: 6px; transition: transform .2s; }
+.chevron.open { transform: rotate(90deg); }
+.card-body { display: none; padding: 14px; border-top: 1px solid var(--border); }
+.card-body.open { display: block; }
+
+/* Timeline */
+.tl { display: flex; flex-direction: column; }
+.tl-row { display: flex; gap: 10px; position: relative; }
+.tl-row:not(:last-child)::before { content: ''; position: absolute; left: 46px; top: 24px; bottom: -2px; width: 1.5px; background: var(--border); }
+.tl-time { font-size: 11px; color: var(--text3); width: 40px; text-align: right; padding-top: 5px; flex-shrink: 0; }
+.tl-dot { width: 11px; height: 11px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; margin-left: 4px; }
+.d-shoot { background: var(--blue); } .d-drive { background: var(--border); } .d-eat { background: var(--yellow); }
+.tl-cnt { flex: 1; padding: 2px 0 13px; }
+.tl-name { font-size: 13px; font-weight: 600; }
+.tl-info { font-size: 11px; color: var(--text3); margin-top: 3px; display: flex; flex-direction: column; gap: 2px; }
+.tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+.tag { font-size: 10px; border-radius: 4px; padding: 2px 7px; font-weight: 500; }
+.tv1 { background: var(--purple-l); color: var(--purple); }
+.tv2 { background: var(--blue-l); color: var(--blue); }
+.tpermit { background: var(--yellow-l); color: var(--yellow); }
+.tbroll { background: var(--green-l); color: var(--green); }
+.tclip { background: var(--bg3); color: var(--text2); }
+.route { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; padding: 10px 0 0; border-top: 1px solid var(--border); margin-top: 8px; font-size: 11px; color: var(--text3); }
+.route strong { color: var(--text); font-weight: 600; }
+
+/* Milestones */
+.ms-list { background: var(--bg2); border: 1.5px solid var(--border); border-radius: 10px; padding: 16px 20px 10px 36px; position: relative; }
+.ms-list::before { content: ''; position: absolute; left: 22px; top: 20px; bottom: 20px; width: 2px; background: var(--border); }
+.ms-row { display: flex; gap: 12px; padding: 5px 0; position: relative; }
+.ms-dot { position: absolute; left: -21px; top: 7px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); background: #fff; z-index: 1; }
+.ms-dot.active { background: var(--blue); border-color: var(--blue); }
+.ms-dot.done { background: var(--green); border-color: var(--green); }
+.ms-date { font-size: 11px; color: var(--text3); width: 56px; flex-shrink: 0; padding-top: 2px; }
+.ms-label { font-size: 13px; font-weight: 600; }
+.ms-sub { font-size: 11px; color: var(--text3); }
+
+/* Contacts */
+.contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.contact-c { border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; }
+.c-org { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+.c-name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.c-phone { font-size: 13px; color: var(--blue); font-weight: 500; }
+.c-note { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* Risks */
+.risk-list { display: flex; flex-direction: column; gap: 7px; }
+.risk-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; }
+.rlvl { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; white-space: nowrap; margin-top: 1px; flex-shrink: 0; }
+.r-high { background: var(--red-l); color: var(--red); }
+.r-mid { background: var(--yellow-l); color: var(--yellow); }
+.r-low { background: var(--green-l); color: var(--green); }
+.r-title { font-size: 13px; font-weight: 600; }
+.r-action { font-size: 11px; color: var(--text3); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div>
+    <div class="hdr-title">🎬 제주 물정책 홍보영상 프로젝트</div>
+    <div class="hdr-sub">제주도청 물정책과 · 서귀포시청 출발 · 촬영 3일</div>
+    <div class="hdr-pills">
+      <span class="hdr-pill">영상① 지하수 관측·예측</span>
+      <span class="hdr-pill">영상② 대체수자원 개발</span>
+      <span class="hdr-pill">3초 클립 × 13개 × 2편 = 40초</span>
+    </div>
+  </div>
+  <div class="deadline-box">
+    <div class="deadline-num" id="dday">—</div>
+    <div class="deadline-lbl">D-DAY</div>
+    <div class="deadline-date">마감 6월 26일</div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div class="sum-row">
+  <div class="sum-c"><div class="sum-lbl">촬영 시작</div><div class="sum-val">5/20</div><div class="sum-sub">화요일</div></div>
+  <div class="sum-c"><div class="sum-lbl">촬영 완료</div><div class="sum-val">5/27</div><div class="sum-sub">화요일</div></div>
+  <div class="sum-c"><div class="sum-lbl">편집 기간</div><div class="sum-val">22일</div><div class="sum-sub">5/28 → 6/18</div></div>
+  <div class="sum-c"><div class="sum-lbl">검토 버퍼</div><div class="sum-val">7일</div><div class="sum-sub">6/19 → 6/25</div></div>
+  <div class="sum-c"><div class="sum-lbl">총 클립 목표</div><div class="sum-val">28~32</div><div class="sum-sub">최소 26개 필요</div></div>
+</div>
+
+<!-- GANTT -->
+<div class="sec">
+  <div class="sec-hdr">📅 프로젝트 타임라인</div>
+  <div class="gantt">
+    <div class="gantt-legend">
+      <span><i style="background:var(--yellow)"></i>프리프로덕션</span>
+      <span><i style="background:var(--blue)"></i>촬영</span>
+      <span><i style="background:var(--purple)"></i>편집</span>
+      <span><i style="background:var(--green)"></i>클라이언트 검토</span>
+      <span><i style="background:var(--red)"></i>납품</span>
+    </div>
+    <div class="gantt-dates">
+      <span>5/16</span><span>5/23</span><span>5/30</span><span>6/6</span><span>6/13</span><span>6/20</span><span>6/26</span>
+    </div>
+    <div class="gantt-track">
+      <div class="gbar g-pre">섭외</div>
+      <div class="gbar g-shoot">촬영 3일</div>
+      <div class="gbar g-edit">편집 · 러프컷 → 파인컷</div>
+      <div class="gbar g-review">검토</div>
+      <div class="gbar g-deliver"></div>
+      <div class="g-today" id="today-line"></div>
+    </div>
+    <div class="gantt-markers">
+      <div class="gmark" style="left:9.76%;color:var(--blue)">▲<br>DAY1</div>
+      <div class="gmark" style="left:14.63%;color:var(--purple)">▲<br>DAY2</div>
+      <div class="gmark" style="left:26.83%;color:var(--green)">▲<br>DAY3</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKLIST -->
+<div class="sec">
+  <div class="sec-hdr">✅ 프리프로덕션 체크리스트 <span id="prog-txt" style="float:right;font-weight:400;"></span></div>
+  <div class="checklist">
+    <div class="ck-item" id="c1" onclick="toggle('c1')">
+      <input type="checkbox" onclick="event.stopPropagation();toggle('c1')">
+      <div style="flex:1"><div class="ck-text">물정책과 관제센터 촬영 허가 요청</div><div class="ck-sub">064-710-3470 · DAY 2 (5/22) 전체 일정에 영향</div></div>
+      <span class="ck-badge ck-now">오늘</span>
+    </div>
+    <div class="ck-item" id="c2" onclick="toggle('c2')">
+      <input type="checkbox" onclick="event.stopPropagation();toggle('c2')">
+      <div style="flex:1"><div class="ck-text">판포하수처리장 내부 촬영 협조 요청</div><div class="ck-sub">제주시 하수도과 064-728-3451 · DAY 3 (5/27)</div></div>
+      <span class="ck-badge ck-now">오늘</span>
+    </div>
+    <div class="ck-item" id="c3" onclick="toggle('c3')">
+      <input type="checkbox" onclick="event.stopPropagation();toggle('c3')">
+      <div style="flex:1"><div class="ck-text">삼다수 취수원 방문 예약</div><div class="ck-sub">제주개발공사 064-780-3300 · DAY 1 (5/20)</div></div>
+      <span class="ck-badge ck-now">오늘</span>
+    </div>
+    <div class="ck-item" id="c4" onclick="toggle('c4')">
+      <input type="checkbox" onclick="event.stopPropagation();toggle('c4')">
+      <div style="flex:1"><div class="ck-text">위미리 빗물시설 현장 관계자 섭외</div><div class="ck-sub">물정책과 통해 현장 담당자 연결 요청 · DAY 1 (5/20)</div></div>
+      <span class="ck-badge ck-week">이번주</span>
+    </div>
+    <div class="ck-item" id="c5" onclick="toggle('c5')">
+      <input type="checkbox" onclick="event.stopPropagation();toggle('c5')">
+      <div style="flex:1"><div class="ck-text">빗물저금통 3개소 방문 사전 연락</div><div class="ck-sub">이화요양원 · 무지개마을 · 송죽원 (아래 연락처 참조)</div></div>
+      <span class="ck-badge ck-week">이번주</span>
+    </div>
+    <div class="ck-item" id="c6" onclick="toggle('c6')">
+      <input type="checkbox" onclick="event.stopPropagation();toggle('c6')">
+      <div style="flex:1"><div class="ck-text">관측정 위치 물정책과와 협의 확정</div><div class="ck-sub">DAY 2 오후 일정 · 관제센터 허가 통화 시 동시 진행</div></div>
+      <span class="ck-badge ck-week">이번주</span>
+    </div>
+    <div class="ck-item" id="c7" onclick="toggle('c7')">
+      <input type="checkbox" onclick="event.stopPropagation();toggle('c7')">
+      <div style="flex:1"><div class="ck-text">영상 ①② 샷리스트 작성</div><div class="ck-sub">각 13~14개 클립 구성 사전 설계 · 촬영 전 완료</div></div>
+      <span class="ck-badge ck-week">촬영 전</span>
+    </div>
+    <div class="ck-item" id="c8" onclick="toggle('c8')">
+      <input type="checkbox" onclick="event.stopPropagation();toggle('c8')">
+      <div style="flex:1"><div class="ck-text">촬영 장비 점검</div><div class="ck-sub">배터리 · SD카드 · 삼각대 · ND필터 (야외·공사현장 대비)</div></div>
+      <span class="ck-badge ck-week">촬영 전</span>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-meta"><span>진행률</span><span id="prog-label">0 / 8</span></div>
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SHOOTING DAYS -->
+<div class="sec">
+  <div class="sec-hdr">🎥 촬영 일정</div>
+
+  <!-- DAY 1 -->
+  <div class="card">
+    <div class="card-hdr" onclick="openCard('d1')">
+      <span class="cbadge bd1">DAY 1</span>
+      <span class="card-title">5월 20일 (화) — 동쪽 루트</span>
+      <span class="card-meta">클립 7~9개 목표</span>
+      <span class="chevron" id="cv-d1">▶</span>
+    </div>
+    <div class="card-body" id="bd-d1">
+      <div class="tl">
+        <div class="tl-row"><div class="tl-time">09:00</div><div class="tl-dot d-drive"></div><div class="tl-cnt"><div class="tl-name">서귀포시청 출발</div></div></div>
+        <div class="tl-row"><div class="tl-time">09:20</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">위미리 빗물이용시설 <span style="font-size:10px;color:var(--text3);font-weight:400">전국 최초 지역 단위</span></div>
+          <div class="tl-info"><span>📌 서귀포시 남원읍 위미리 일원</span><span>📞 현장 담당자 — 물정책과(064-710-3470) 통해 섭외</span></div>
+          <div class="tags"><span class="tag tclip">클립 3~4개</span><span class="tag tv2">영상 ②</span><span class="tag tpermit">섭외 필요</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">11:00</div><div class="tl-dot d-drive"></div><div class="tl-cnt"><div class="tl-name">이동 → 성산 (40분)</div></div></div>
+        <div class="tl-row"><div class="tl-time">11:40</div><div class="tl-dot d-eat"></div><div class="tl-cnt"><div class="tl-name">점심 — 성산읍</div></div></div>
+        <div class="tl-row"><div class="tl-time">12:40</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">성산읍사무소</div>
+          <div class="tl-info"><span>📌 서귀포시 성산읍 일주동로 4330</span><span>📞 064-760-4001</span></div>
+          <div class="tags"><span class="tag tclip">클립 2개</span><span class="tag tv2">영상 ②</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">14:00</div><div class="tl-dot d-drive"></div><div class="tl-cnt"><div class="tl-name">이동 → 삼다수 취수원 (40분)</div></div></div>
+        <div class="tl-row"><div class="tl-time">14:40</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">제주삼다수 취수원·견학관</div>
+          <div class="tl-info"><span>📌 제주시 조천읍 남조로 1717-35</span><span>📞 064-780-3300 (제주개발공사)</span></div>
+          <div class="tags"><span class="tag tclip">클립 3~4개</span><span class="tag tv1">영상 ①</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">17:00</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">용천수 해안 B-Roll</div>
+          <div class="tl-info"><span>📌 함덕 해수욕장 / 김녕 해변 (조천읍 일대)</span><span>⏰ 석양빛 골든타임 활용</span></div>
+          <div class="tags"><span class="tag tclip">클립 1~2개</span><span class="tag tbroll">공통 B-Roll</span></div>
+        </div></div>
+      </div>
+      <div class="route"><strong>서귀포시청</strong><span>→</span><strong>위미리</strong><span>→</span><strong>성산읍사무소</strong><span>→</span><strong>삼다수 취수원</strong><span>→</span><strong>함덕 해안</strong></div>
+    </div>
+  </div>
+
+  <!-- DAY 2 -->
+  <div class="card">
+    <div class="card-hdr" onclick="openCard('d2')">
+      <span class="cbadge bd2">DAY 2</span>
+      <span class="card-title">5월 22일 (목) — 제주시 루트</span>
+      <span class="card-meta">클립 7~9개 목표</span>
+      <span class="chevron" id="cv-d2">▶</span>
+    </div>
+    <div class="card-body" id="bd-d2">
+      <div class="tl">
+        <div class="tl-row"><div class="tl-time">09:00</div><div class="tl-dot d-drive"></div><div class="tl-cnt"><div class="tl-name">서귀포 출발 → 도청 (1116번, 50분)</div></div></div>
+        <div class="tl-row"><div class="tl-time">10:00</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">물정책과 지하수 관제센터 ⭐</div>
+          <div class="tl-info"><span>📌 제주특별자치도 제주시 문연로 6 (도청 본관)</span><span>📞 064-710-3470 · 사전 약속 필수</span></div>
+          <div class="tags"><span class="tag tclip">클립 4~5개</span><span class="tag tv1">영상 ①</span><span class="tag tpermit">허가 필요</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">12:00</div><div class="tl-dot d-eat"></div><div class="tl-cnt"><div class="tl-name">점심 — 제주시내</div></div></div>
+        <div class="tl-row"><div class="tl-time">13:00</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">지하수 관측정 현장</div>
+          <div class="tl-info"><span>📌 물정책과 추천 위치 (도청 방문 시 현장 확정)</span><span>📞 064-710-3470</span></div>
+          <div class="tags"><span class="tag tclip">클립 3개</span><span class="tag tv1">영상 ①</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">15:00</div><div class="tl-dot d-drive"></div><div class="tl-cnt"><div class="tl-name">이동 → 유수암리 (애월 방향, 30분)</div></div></div>
+        <div class="tl-row"><div class="tl-time">15:30</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">송죽원 빗물저금통</div>
+          <div class="tl-info"><span>📌 제주시 애월읍 유수암리 1329</span><span>📞 이원주 064-854-7986 · 정지원 064-369-2736</span></div>
+          <div class="tags"><span class="tag tclip">클립 2개</span><span class="tag tv2">영상 ②</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">17:00</div><div class="tl-dot d-drive"></div><div class="tl-cnt"><div class="tl-name">1100번 도로로 서귀포 귀환 (50분)</div></div></div>
+      </div>
+      <div class="route"><strong>서귀포시청</strong><span>→</span><strong>도청 관제센터</strong><span>→</span><strong>관측정</strong><span>→</span><strong>유수암리 송죽원</strong><span>→</span><strong>서귀포 귀환</strong></div>
+    </div>
+  </div>
+
+  <!-- DAY 3 -->
+  <div class="card">
+    <div class="card-hdr" onclick="openCard('d3')">
+      <span class="cbadge bd3">DAY 3</span>
+      <span class="card-title">5월 27일 (화) — 서쪽 루트</span>
+      <span class="card-meta">클립 7~8개 목표</span>
+      <span class="chevron" id="cv-d3">▶</span>
+    </div>
+    <div class="card-body" id="bd-d3">
+      <div class="tl">
+        <div class="tl-row"><div class="tl-time">09:00</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">무지개마을 빗물저금통</div>
+          <div class="tl-info"><span>📌 서귀포시 월평동 292-5</span><span>📞 고민정 010-9028-7771 · 김민범 010-4816-2595</span></div>
+          <div class="tags"><span class="tag tclip">클립 2개</span><span class="tag tv2">영상 ②</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">10:00</div><div class="tl-dot d-drive"></div><div class="tl-cnt"><div class="tl-name">이동 → 대정읍 (30분)</div></div></div>
+        <div class="tl-row"><div class="tl-time">10:30</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">이화요양원 빗물저금통</div>
+          <div class="tl-info"><span>📌 서귀포시 대정읍 일과리 498</span><span>📞 강희영 010-6620-2550</span></div>
+          <div class="tags"><span class="tag tclip">클립 2개</span><span class="tag tv2">영상 ②</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">11:30</div><div class="tl-dot d-eat"></div><div class="tl-cnt"><div class="tl-name">점심 — 대정읍</div></div></div>
+        <div class="tl-row"><div class="tl-time">13:00</div><div class="tl-dot d-shoot"></div><div class="tl-cnt">
+          <div class="tl-name">판포하수처리장 (서부하수처리장)</div>
+          <div class="tl-info"><span>📌 제주시 한경면 판포리</span><span>📞 제주시 하수도과 064-728-3451 · 내부 촬영 협조 필수</span></div>
+          <div class="tags"><span class="tag tclip">클립 3~4개</span><span class="tag tv2">영상 ②</span><span class="tag tpermit">허가 필요</span></div>
+        </div></div>
+        <div class="tl-row"><div class="tl-time">15:30</div><div class="tl-dot d-drive"></div><div class="tl-cnt"><div class="tl-name">서귀포 귀환 — 해안도로 or 중산간 (1시간)</div></div></div>
+      </div>
+      <div class="route"><strong>서귀포시청</strong><span>→</span><strong>월평동</strong><span>→</span><strong>대정읍 이화요양원</strong><span>→</span><strong>한경면 판포</strong><span>→</span><strong>서귀포 귀환</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- MILESTONES -->
+<div class="sec">
+  <div class="sec-hdr">🎞 포스트프로덕션 마일스톤</div>
+  <div class="ms-list">
+    <div class="ms-row"><div class="ms-dot active"></div><div class="ms-date">5/16–19</div><div><div class="ms-label">프리프로덕션</div><div class="ms-sub">섭외 · 허가 · 장비 점검</div></div></div>
+    <div class="ms-row"><div class="ms-dot"></div><div class="ms-date">5/20–27</div><div><div class="ms-label">촬영 3일</div><div class="ms-sub">DAY1 동쪽 · DAY2 제주시 · DAY3 서쪽</div></div></div>
+    <div class="ms-row"><div class="ms-dot"></div><div class="ms-date">5/28–6/6</div><div><div class="ms-label">러프컷</div><div class="ms-sub">클립 선별 · 순서 배치 · 영상 ①② 초안</div></div></div>
+    <div class="ms-row"><div class="ms-dot"></div><div class="ms-date">6/7–18</div><div><div class="ms-label">파인컷 + 사운드</div><div class="ms-sub">컬러그레이딩 · 음악 · 자막 / 6/12 중간 공유 권장</div></div></div>
+    <div class="ms-row"><div class="ms-dot"></div><div class="ms-date">6/19–25</div><div><div class="ms-label">클라이언트 검토</div><div class="ms-sub">피드백 수렴 · 수정 최대 2회</div></div></div>
+    <div class="ms-row"><div class="ms-dot"></div><div class="ms-date">6/26</div><div><div class="ms-label" style="color:var(--red)">🚩 최종 납품</div><div class="ms-sub">영상 ①② 완성본 전달</div></div></div>
+  </div>
+</div>
+
+<!-- CONTACTS -->
+<div class="sec">
+  <div class="sec-hdr">📞 연락처 디렉토리</div>
+  <div class="contact-grid">
+    <div class="contact-c" style="border-left:3px solid var(--red)">
+      <div class="c-org">⚠ 즉시 연락</div>
+      <div class="c-name">제주도청 물정책과</div>
+      <div class="c-phone">064-710-3470</div>
+      <div class="c-note">관제센터 허가 + 관측정 위치 확인</div>
+    </div>
+    <div class="contact-c" style="border-left:3px solid var(--red)">
+      <div class="c-org">⚠ 즉시 연락</div>
+      <div class="c-name">제주시 하수도과</div>
+      <div class="c-phone">064-728-3451</div>
+      <div class="c-note">판포하수처리장 내부 촬영 협조</div>
+    </div>
+    <div class="contact-c" style="border-left:3px solid var(--blue)">
+      <div class="c-org">DAY 1 — 삼다수</div>
+      <div class="c-name">제주개발공사</div>
+      <div class="c-phone">064-780-3300</div>
+      <div class="c-note">조천읍 남조로 1717-35 · 방문 예약</div>
+    </div>
+    <div class="contact-c" style="border-left:3px solid var(--blue)">
+      <div class="c-org">DAY 1 — 성산</div>
+      <div class="c-name">성산읍사무소</div>
+      <div class="c-phone">064-760-4001</div>
+      <div class="c-note">성산읍 일주동로 4330</div>
+    </div>
+    <div class="contact-c" style="border-left:3px solid var(--purple)">
+      <div class="c-org">DAY 2 — 유수암리</div>
+      <div class="c-name">송죽원 이원주 / 정지원</div>
+      <div class="c-phone">064-854-7986 / 064-369-2736</div>
+      <div class="c-note">애월읍 유수암리 1329</div>
+    </div>
+    <div class="contact-c" style="border-left:3px solid var(--green)">
+      <div class="c-org">DAY 3 — 서귀포</div>
+      <div class="c-name">무지개마을 고민정 / 김민범</div>
+      <div class="c-phone">010-9028-7771 / 010-4816-2595</div>
+      <div class="c-note">서귀포시 월평동 292-5</div>
+    </div>
+    <div class="contact-c" style="border-left:3px solid var(--green)">
+      <div class="c-org">DAY 3 — 대정읍</div>
+      <div class="c-name">이화요양원 강희영</div>
+      <div class="c-phone">010-6620-2550</div>
+      <div class="c-note">대정읍 일과리 498</div>
+    </div>
+    <div class="contact-c" style="border-left:3px solid #475569">
+      <div class="c-org">추가 섭외 고려</div>
+      <div class="c-name">제주지하수연구센터</div>
+      <div class="c-phone">jgwrc.re.kr</div>
+      <div class="c-note">제주시 아연로 253 · 연구 인터뷰 가능</div>
+    </div>
+  </div>
+</div>
+
+<!-- RISKS -->
+<div class="sec">
+  <div class="sec-hdr">⚠ 리스크 등록부</div>
+  <div class="risk-list">
+    <div class="risk-row">
+      <span class="rlvl r-high">HIGH</span>
+      <div><div class="r-title">관제센터 촬영 허가 지연</div><div class="r-action">대응: 이번 주 내 확정. 지연 시 DAY 2를 5/29(목)으로 이동</div></div>
+    </div>
+    <div class="risk-row">
+      <span class="rlvl r-high">HIGH</span>
+      <div><div class="r-title">위미리 공사현장 접근 제한</div><div class="r-action">대응: 물정책과 통해 현장 담당자 사전 연결 필수. 불가 시 외부 전경 + 항공샷으로 대체</div></div>
+    </div>
+    <div class="risk-row">
+      <span class="rlvl r-mid">MID</span>
+      <div><div class="r-title">날씨 — 야외 촬영일 악천후</div><div class="r-action">대응: 촬영일 전날 기상 확인. 우천 시 실내 장소(관제센터·판포) 우선, 야외는 예비일로 이동</div></div>
+    </div>
+    <div class="risk-row">
+      <span class="rlvl r-mid">MID</span>
+      <div><div class="r-title">클라이언트 수정 요청 과다</div><div class="r-action">대응: 6/12 러프컷 중간 공유 1회 진행 권장. 수정 횟수 2회로 계약 명시</div></div>
+    </div>
+    <div class="risk-row">
+      <span class="rlvl r-low">LOW</span>
+      <div><div class="r-title">빗물저금통 담당자 연락 불가</div><div class="r-action">대응: 3개소 중 2개소 확보만으로도 영상② 구성 가능. 성산읍사무소로 대체 가능</div></div>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+// D-Day
+const deadline = new Date('2026-06-26');
+const today = new Date(); today.setHours(0,0,0,0);
+const diff = Math.ceil((deadline - today) / 864e5);
+document.getElementById('dday').textContent = 'D-' + diff;
+
+// Gantt today line
+const start = new Date('2026-05-16');
+const total = 41;
+const passed = Math.max(0, Math.min(total, Math.ceil((today - start) / 864e5)));
+document.getElementById('today-line').style.left = (passed / total * 100) + '%';
+
+// Card toggle
+function openCard(id) {
+  const body = document.getElementById('bd-' + id);
+  const cv = document.getElementById('cv-' + id);
+  body.classList.toggle('open');
+  cv.classList.toggle('open');
+}
+
+// Checklist
+const KEY = 'jeju-water-v1';
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || '{}');
+    for (let i = 1; i <= 8; i++) {
+      if (s['c' + i]) {
+        const el = document.getElementById('c' + i);
+        el.classList.add('done');
+        el.querySelector('input').checked = true;
+      }
+    }
+  } catch(e) {}
+  updateProg();
+}
+function toggle(id) {
+  const el = document.getElementById(id);
+  const cb = el.querySelector('input');
+  cb.checked = !cb.checked;
+  el.classList.toggle('done', cb.checked);
+  save(); updateProg();
+}
+function save() {
+  const s = {};
+  for (let i = 1; i <= 8; i++) {
+    const el = document.getElementById('c' + i);
+    if (el) s['c' + i] = el.querySelector('input').checked;
+  }
+  localStorage.setItem(KEY, JSON.stringify(s));
+}
+function updateProg() {
+  let done = 0;
+  for (let i = 1; i <= 8; i++) {
+    const el = document.getElementById('c' + i);
+    if (el && el.querySelector('input').checked) done++;
+  }
+  document.getElementById('prog-fill').style.width = (done / 8 * 100) + '%';
+  document.getElementById('prog-label').textContent = done + ' / 8 완료';
+}
+load();
+</script>
+</body>
+</html>

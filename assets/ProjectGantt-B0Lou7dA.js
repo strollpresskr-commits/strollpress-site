@@ -1,0 +1,1 @@
+import{j as t}from"./index-RUukQnaj.js";function o(){return t.jsx("iframe",{src:"/artifacts/project-gantt.html",style:{width:"100%",height:"100%",border:"none",display:"block",position:"absolute",inset:0},title:"Project Gantt"})}export{o as default};
