@@ -10,19 +10,19 @@ PYTHON="python3"
 
 # ── 의존성 확인 / 설치 ──────────────────────────────────────────────────────
 echo "📦 의존성 확인 중..."
-$PYTHON -m pip install --quiet anthropic httpx 2>/dev/null || {
+$PYTHON -m pip install --quiet google-generativeai pillow httpx 2>/dev/null || {
   echo "❌ pip install 실패. 다음을 먼저 실행하세요:"
-  echo "   python3 -m pip install anthropic httpx"
+  echo "   python3 -m pip install google-generativeai pillow httpx"
   exit 1
 }
 
 # ── API 키 확인 ─────────────────────────────────────────────────────────────
-if [ -z "$ANTHROPIC_API_KEY" ]; then
+if [ -z "$GEMINI_API_KEY" ]; then
   echo ""
-  echo "ANTHROPIC_API_KEY가 설정되지 않았습니다."
-  echo -n "Anthropic API 키를 입력하세요 (sk-...): "
-  read -r ANTHROPIC_API_KEY
-  export ANTHROPIC_API_KEY
+  echo "GEMINI_API_KEY가 설정되지 않았습니다."
+  echo -n "Google AI Studio API 키를 입력하세요 (AIza...): "
+  read -r GEMINI_API_KEY
+  export GEMINI_API_KEY
 fi
 
 if [ -z "$NOTION_API_KEY" ]; then
