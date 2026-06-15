@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-const PIN = import.meta.env.VITE_PIN || '1234'
+const PIN = import.meta.env.VITE_PIN || '250925'
 const SESSION_KEY = 'stroll_auth'
 const MAX_ATTEMPTS = 5
 const COOLDOWN_MS = 30000
