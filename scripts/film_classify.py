@@ -10,9 +10,9 @@ Notion '필름스캔 아카이브' DB에서 ai_tag가 템플릿 형태로 남아
   NOTION_API_KEY     — Notion Integration 토큰
 
 실행:
-  FILM_BASE=/Volumes/PP python3 scripts/film_classify.py
+  python3 scripts/film_classify.py
   또는 --base 옵션으로 경로 지정:
-  python3 scripts/film_classify.py --base /Volumes/PP --limit 20 --dry-run
+  python3 scripts/film_classify.py --base "/Volumes/T7 Shield" --limit 20 --dry-run
 """
 
 import argparse
@@ -126,8 +126,8 @@ def classify_image(client: anthropic.Anthropic, image_path: Path) -> str:
 # ── 메인 ───────────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="필름스캔 AI 재분류 파이프라인")
-    parser.add_argument("--base", default=os.environ.get("FILM_BASE", "/Volumes/PP"),
-                        help="필름 스캔 파일 기준 경로 (기본: /Volumes/PP)")
+    parser.add_argument("--base", default=os.environ.get("FILM_BASE", "/Volumes/T7 Shield"),
+                        help="필름 스캔 파일 기준 경로 (기본: /Volumes/T7 Shield)")
     parser.add_argument("--limit", type=int, default=50, help="처리할 최대 사진 수")
     parser.add_argument("--dry-run", action="store_true", help="Notion 업데이트 생략 (테스트)")
     args = parser.parse_args()
