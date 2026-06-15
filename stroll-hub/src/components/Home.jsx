@@ -1,13 +1,7 @@
+import { useState } from 'react'
 import data from '../data/notion.json'
 
 const DAYS_KR = ['일', '월', '화', '수', '목', '금', '토']
-const TYPE_COLOR = {
-  '영상': '#2563eb',
-  '편집디자인': '#7c3aed',
-  '인쇄/제작': '#059669',
-  '브랜딩': '#dc2626',
-  '포스터': '#ea580c',
-}
 
 function daysUntil(dateStr) {
   if (!dateStr) return null
@@ -51,13 +45,39 @@ function riskLevel(p) {
   return 'ok'
 }
 
+function TaskList({ tasks }) {
+  const [expanded, setExpanded] = useState(false)
+  if (!tasks || tasks.length === 0) return null
+  const MAX = 3
+  const shown = expanded ? tasks : tasks.slice(0, MAX)
+  const hidden = tasks.length - MAX
+  return (
+    <div style={{ marginTop: 10, borderTop: '1px solid #f0f0f0', paddingTop: 8 }}>
+      {shown.map((t, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '2px 0', fontSize: 11, color: '#555' }}>
+          <div style={{ width: 10, height: 10, border: '1.5px solid #d0d0d0', borderRadius: 2, flexShrink: 0, marginTop: 2 }} />
+          <span>{t}</span>
+        </div>
+      ))}
+      {!expanded && hidden > 0 && (
+        <button onClick={() => setExpanded(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#8e8e93', padding: '2px 0', marginTop: 2 }}>
+          + {hidden}개 더 보기
+        </button>
+      )}
+    </div>
+  )
+}
+
 export default function Home() {
   const now = new Date()
+  const todayStr = now.toISOString().slice(0, 10)
   const today = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${DAYS_KR[now.getDay()]}요일`
 
   const active = data.projects.filter(p => p.status === '진행중')
   const critical = active.filter(p => ['critical', 'overdue'].includes(riskLevel(p)))
   const warning = active.filter(p => riskLevel(p) === 'warning')
+
+  const todayItems = data.schedule.filter(s => s.date === todayStr)
 
   const upcoming = data.schedule
     .map(s => ({ ...s, daysLeft: daysUntil(s.date) }))
@@ -95,6 +115,19 @@ export default function Home() {
         ))}
       </div>
 
+      {/* Today's items */}
+      {todayItems.length > 0 && (
+        <div style={{ background: '#f0f7ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', letterSpacing: '.06em', marginBottom: 8 }}>📌 오늘 할 것</div>
+          {todayItems.map((s, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderTop: i > 0 ? '1px solid rgba(0,0,0,.05)' : 'none' }}>
+              <span style={{ fontSize: 13, fontWeight: 500 }}>{s.title}</span>
+              {s.time && <span style={{ fontSize: 11, color: '#8e8e93' }}>{s.time}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Risk banners */}
       {critical.length > 0 && (
         <div style={{ background: '#fff5f5', border: '1px solid #fecaca', borderRadius: 10, padding: '12px 16px', marginBottom: 12 }}>
@@ -131,12 +164,12 @@ export default function Home() {
           <div style={{ fontSize: 10, fontWeight: 700, color: '#8e8e93', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 10 }}>⏰ D-14 이내 일정</div>
           <div style={{ background: '#fff', border: '1.5px solid #e8e8e8', borderRadius: 10, overflow: 'hidden' }}>
             {upcoming.map((s, i) => {
-              const d = daysUntil(s.date)
+              const d = s.daysLeft
               return (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderTop: i > 0 ? '1px solid #f0f0f0' : 'none' }}>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: d <= 3 ? '#fee2e2' : d <= 7 ? '#ffedd5' : '#dbeafe', color: d <= 3 ? '#dc2626' : d <= 7 ? '#ea580c' : '#2563eb', flexShrink: 0 }}>{ddayLabel(d)}</span>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{s.title}</span>
-                  <span style={{ fontSize: 11, color: '#8e8e93' }}>{s.date.slice(5).replace('-', '/')}</span>
+                  <span style={{ fontSize: 11, color: '#8e8e93', whiteSpace: 'nowrap' }}>{s.date.slice(5).replace('-', '/')}{s.time ? ' ' + s.time : ''}</span>
                 </div>
               )
             })}
@@ -156,23 +189,21 @@ export default function Home() {
             <div key={p.id} style={{ background: '#fff', border: `1.5px solid ${borderColor}`, borderRadius: 10, padding: '14px 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, flex: 1, lineHeight: 1.35 }}>{p.name}</div>
-                <div style={{ display: 'flex', gap: 4, flexShrink: 0, marginLeft: 8 }}>
-                  {d !== null && (
-                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: d <= 7 ? '#fee2e2' : d <= 14 ? '#ffedd5' : '#dbeafe', color: ddayColor(d) }}>{ddayLabel(d)}</span>
-                  )}
-                </div>
+                {d !== null && (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: d <= 7 ? '#fee2e2' : d <= 14 ? '#ffedd5' : '#dbeafe', color: ddayColor(d), flexShrink: 0, marginLeft: 8 }}>{ddayLabel(d)}</span>
+                )}
               </div>
 
               <div style={{ fontSize: 11, color: '#8e8e93', marginBottom: 8 }}>{p.client} · {p.type.join(', ')}</div>
 
-              {/* Progress bar */}
               <div style={{ background: '#f0f0f0', borderRadius: 4, height: 4, marginBottom: 4, overflow: 'hidden' }}>
                 <div style={{ height: '100%', background: rl === 'critical' ? '#dc2626' : rl === 'warning' ? '#ea580c' : '#1c1c1e', borderRadius: 4, width: `${p.progress}%`, transition: 'width .3s' }} />
               </div>
-              <div style={{ fontSize: 10, color: '#bbb', textAlign: 'right', marginBottom: 10 }}>진행 {p.progress}%</div>
+              <div style={{ fontSize: 10, color: '#bbb', textAlign: 'right', marginBottom: 4 }}>진행 {p.progress}%</div>
 
-              {/* Footer */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f5f5f5', paddingTop: 8 }}>
+              <TaskList tasks={p.tasks} />
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f5f5f5', paddingTop: 8, marginTop: 8 }}>
                 <div style={{ display: 'flex', gap: 5 }}>
                   {p.artifact && (
                     <a href={p.artifact} target="_blank" rel="noreferrer" style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 4, background: '#dbeafe', color: '#2563eb', textDecoration: 'none' }}>대시보드 →</a>
