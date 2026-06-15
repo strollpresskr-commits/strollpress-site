@@ -1,5 +1,6 @@
 import { useState, Suspense, lazy } from 'react'
 import './App.css'
+import PinLock from './components/PinLock.jsx'
 
 const Home = lazy(() => import('./components/Home.jsx'))
 const DailyStatus = lazy(() => import('./components/DailyStatus.jsx'))
@@ -40,6 +41,7 @@ export default function App() {
   const ActiveComponent = activeTab?.component
 
   return (
+    <PinLock>
     <div className="app">
       <header className="header">
         <div className="brand">
@@ -67,5 +69,6 @@ export default function App() {
         </Suspense>
       </main>
     </div>
+    </PinLock>
   )
 }
