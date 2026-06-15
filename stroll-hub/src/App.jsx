@@ -1,6 +1,7 @@
 import { useState, Suspense, lazy } from 'react'
 import './App.css'
 
+const Home = lazy(() => import('./components/Home.jsx'))
 const DailyStatus = lazy(() => import('./components/DailyStatus.jsx'))
 const StrollDashboard = lazy(() => import('./components/StrollDashboard.jsx'))
 const JejuWaterProject = lazy(() => import('./components/JejuWaterProject.jsx'))
@@ -12,6 +13,7 @@ const InvestmentDashboard = lazy(() => import('./components/InvestmentDashboard.
 const UnofficialSpecHub = lazy(() => import('./components/UnofficialSpecHub.jsx'))
 
 const TABS = [
+  { id: 'home',                label: '홈',                  icon: '🏠', component: Home },
   { id: 'daily-status',        label: 'Daily Status',        icon: '📋', component: DailyStatus },
   { id: 'stroll-dashboard',    label: 'Stroll Dashboard',    icon: '📊', component: StrollDashboard },
   { id: 'jeju-water-project',  label: 'Jeju Water',          icon: '💧', component: JejuWaterProject },
@@ -32,7 +34,7 @@ function LoadingSpinner() {
 }
 
 export default function App() {
-  const [activeId, setActiveId] = useState(TABS[0].id)
+  const [activeId, setActiveId] = useState('home')
 
   const activeTab = TABS.find(t => t.id === activeId)
   const ActiveComponent = activeTab?.component
