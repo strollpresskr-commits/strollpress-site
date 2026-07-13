@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import data from '../data/notion.json'
+import baseData from '../data/notion.json'
 
 const DAYS_KR = ['일', '월', '화', '수', '목', '금', '토']
+const SAVE_URL = '/.netlify/functions/save-data'
 
 function daysUntil(dateStr) {
   if (!dateStr) return null
@@ -45,82 +46,122 @@ function riskLevel(p) {
   return 'ok'
 }
 
-function TodoItem({ storageKey, text, tag, defaultDone, first }) {
-  const [done, setDone] = useState(() => {
-    try {
-      const v = localStorage.getItem(storageKey)
-      return v === null ? !!defaultDone : v === '1'
-    } catch { return !!defaultDone }
-  })
-  const toggle = () => {
-    const nv = !done
-    setDone(nv)
-    try { localStorage.setItem(storageKey, nv ? '1' : '0') } catch {}
-  }
+function Check({ done, onClick }) {
   return (
-    <div onClick={toggle} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', cursor: 'pointer', borderTop: first ? 'none' : '1px solid #f2f2f2', userSelect: 'none' }}>
-      <div style={{ width: 17, height: 17, borderRadius: 5, border: done ? 'none' : '1.5px solid #cbd5e1', background: done ? '#2563eb' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        {done && <span style={{ color: '#fff', fontSize: 11, fontWeight: 800, lineHeight: 1 }}>✓</span>}
-      </div>
-      <span style={{ flex: 1, fontSize: 13, color: done ? '#b8b8bd' : '#1c1c1e', textDecoration: done ? 'line-through' : 'none' }}>{text}</span>
-      {tag && <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5, flexShrink: 0 }}>{tag}</span>}
+    <div onClick={onClick} style={{ width: 17, height: 17, borderRadius: 5, border: done ? 'none' : '1.5px solid #cbd5e1', background: done ? '#2563eb' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
+      {done && <span style={{ color: '#fff', fontSize: 11, fontWeight: 800, lineHeight: 1 }}>✓</span>}
     </div>
   )
 }
 
-function TaskList({ tasks }) {
+function TaskRows({ tasks, edit, onToggle, onEdit, onDelete, onAdd }) {
   const [expanded, setExpanded] = useState(false)
-  if (!tasks || tasks.length === 0) return null
+  const list = tasks || []
   const MAX = 3
-  const shown = expanded ? tasks : tasks.slice(0, MAX)
-  const hidden = tasks.length - MAX
+  const shown = edit || expanded ? list : list.slice(0, MAX)
+  const hidden = list.length - MAX
   return (
     <div style={{ marginTop: 10, borderTop: '1px solid #f0f0f0', paddingTop: 8 }}>
-      {shown.map((t, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '2px 0', fontSize: 11, color: '#555' }}>
-          <div style={{ width: 10, height: 10, border: '1.5px solid #d0d0d0', borderRadius: 2, flexShrink: 0, marginTop: 2 }} />
-          <span>{t}</span>
-        </div>
+      {shown.map((t, i) => {
+        const done = typeof t === 'object' ? t.done : false
+        const text = typeof t === 'object' ? t.text : t
+        return (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
+            <Check done={done} onClick={() => onToggle(i)} />
+            {edit ? (
+              <input value={text} onChange={e => onEdit(i, e.target.value)} style={{ flex: 1, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 4, padding: '3px 6px' }} />
+            ) : (
+              <span style={{ flex: 1, fontSize: 11, color: done ? '#b8b8bd' : '#555', textDecoration: done ? 'line-through' : 'none' }}>{text}</span>
+            )}
+            {edit && <button onClick={() => onDelete(i)} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '0 4px' }}>×</button>}
+          </div>
+        )
+      })}
+      {edit ? (
+        <button onClick={onAdd} style={{ border: '1px dashed #cbd5e1', background: 'none', borderRadius: 5, color: '#6b7280', cursor: 'pointer', fontSize: 11, padding: '3px 8px', marginTop: 4 }}>+ 항목</button>
+      ) : (!expanded && hidden > 0 && (
+        <button onClick={() => setExpanded(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#8e8e93', padding: '2px 0', marginTop: 2 }}>+ {hidden}개 더 보기</button>
       ))}
-      {!expanded && hidden > 0 && (
-        <button onClick={() => setExpanded(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#8e8e93', padding: '2px 0', marginTop: 2 }}>
-          + {hidden}개 더 보기
-        </button>
-      )}
     </div>
   )
 }
 
 export default function Home() {
+  const [data, setData] = useState(baseData)
+  const [edit, setEdit] = useState(false)
+  const [dirty, setDirty] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState(null)
+
   const now = new Date()
   const todayStr = now.toISOString().slice(0, 10)
   const today = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${DAYS_KR[now.getDay()]}요일`
 
+  const mutate = (fn) => {
+    setData(prev => { const next = structuredClone(prev); fn(next); return next })
+    setDirty(true); setMsg(null)
+  }
+
+  async function save() {
+    let secret = localStorage.getItem('stroll_edit_secret')
+    if (!secret) {
+      secret = window.prompt('편집 비밀번호를 입력하세요')
+      if (!secret) return
+      localStorage.setItem('stroll_edit_secret', secret)
+    }
+    setSaving(true); setMsg(null)
+    try {
+      const res = await fetch(SAVE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, data }),
+      })
+      if (res.status === 401) {
+        localStorage.removeItem('stroll_edit_secret')
+        setMsg({ ok: false, text: '비밀번호가 틀렸어요. 다시 시도하세요.' })
+      } else if (!res.ok) {
+        const t = await res.text()
+        setMsg({ ok: false, text: '저장 실패: ' + t.slice(0, 100) })
+      } else {
+        setDirty(false)
+        setMsg({ ok: true, text: '저장됨 · 1~2분 후 모든 기기에 반영돼요' })
+      }
+    } catch {
+      setMsg({ ok: false, text: '네트워크 오류 (함수가 아직 배포 안 됐을 수 있어요)' })
+    }
+    setSaving(false)
+  }
+
   const active = data.projects.filter(p => p.status === '진행중')
   const critical = active.filter(p => ['critical', 'overdue'].includes(riskLevel(p)))
   const warning = active.filter(p => riskLevel(p) === 'warning')
-
   const todayItems = data.schedule.filter(s => s.date === todayStr)
-
   const upcoming = data.schedule
     .map(s => ({ ...s, daysLeft: daysUntil(s.date) }))
     .filter(s => s.daysLeft !== null && s.daysLeft >= 0 && s.daysLeft <= 14)
     .sort((a, b) => a.daysLeft - b.daysLeft)
-
   const totalBudget = active.reduce((sum, p) => sum + (netBudget(p) || 0), 0)
   const nearestD = active
     .map(p => daysUntil(p.deadline))
     .filter(d => d !== null && d >= 0)
     .sort((a, b) => a - b)[0]
 
+  // index into data.projects for a given active project
+  const pIndex = (p) => data.projects.findIndex(x => x.id === p.id)
+
   return (
-    <div style={{ maxWidth: 860, margin: '0 auto', padding: '20px 16px 48px', fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontSize: 14, color: '#1c1c1e', lineHeight: 1.5 }}>
+    <div style={{ maxWidth: 860, margin: '0 auto', padding: '20px 16px 88px', fontFamily: '-apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif', fontSize: 14, color: '#1c1c1e', lineHeight: 1.5 }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 11, color: '#8e8e93', fontWeight: 600, letterSpacing: '.05em', marginBottom: 2 }}>STROLL HUB</div>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>{today}</div>
-        <div style={{ fontSize: 11, color: '#8e8e93', marginTop: 4 }}>노션 동기화: {data.synced_at} · 업데이트하려면 Claude에게 <strong>"대시보드 업데이트해줘"</strong></div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+        <div>
+          <div style={{ fontSize: 11, color: '#8e8e93', fontWeight: 600, letterSpacing: '.05em', marginBottom: 2 }}>STROLL HUB</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{today}</div>
+          <div style={{ fontSize: 11, color: '#8e8e93', marginTop: 4 }}>노션 동기화: {data.synced_at}</div>
+        </div>
+        <button onClick={() => setEdit(e => !e)} style={{ flexShrink: 0, fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: '1.5px solid ' + (edit ? '#2563eb' : '#e8e8e8'), background: edit ? '#2563eb' : '#fff', color: edit ? '#fff' : '#1c1c1e', cursor: 'pointer' }}>
+          {edit ? '✓ 편집 중' : '✏️ 편집'}
+        </button>
       </div>
 
       {/* Pulse */}
@@ -139,15 +180,32 @@ export default function Home() {
       </div>
 
       {/* Brain-dump todos */}
-      {data.todos && data.todos.items && data.todos.items.length > 0 && (
+      {data.todos && data.todos.items && (
         <div style={{ background: '#fff', border: '1.5px solid #e8e8e8', borderRadius: 10, padding: '12px 16px 8px', marginBottom: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: '#8e8e93', letterSpacing: '.06em' }}>📝 오늘 할 일</div>
             {data.todos.date && <div style={{ fontSize: 10, color: '#c7c7cc' }}>{data.todos.date.slice(5).replace('-', '/')}</div>}
           </div>
           {data.todos.items.map((t, i) => (
-            <TodoItem key={i} storageKey={`todo_${data.todos.date}_${i}`} text={t.text} tag={t.tag} defaultDone={t.done} first={i === 0} />
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', borderTop: i === 0 ? 'none' : '1px solid #f2f2f2' }}>
+              <Check done={t.done} onClick={() => mutate(n => { n.todos.items[i].done = !n.todos.items[i].done })} />
+              {edit ? (
+                <>
+                  <input value={t.text} onChange={e => mutate(n => { n.todos.items[i].text = e.target.value })} style={{ flex: 1, fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 7px' }} />
+                  <input value={t.tag || ''} placeholder="태그" onChange={e => mutate(n => { n.todos.items[i].tag = e.target.value })} style={{ width: 72, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 6px' }} />
+                  <button onClick={() => mutate(n => { n.todos.items.splice(i, 1) })} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
+                </>
+              ) : (
+                <>
+                  <span style={{ flex: 1, fontSize: 13, color: t.done ? '#b8b8bd' : '#1c1c1e', textDecoration: t.done ? 'line-through' : 'none' }}>{t.text}</span>
+                  {t.tag && <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>{t.tag}</span>}
+                </>
+              )}
+            </div>
           ))}
+          {edit && (
+            <button onClick={() => mutate(n => { n.todos.items.push({ text: '', tag: '', done: false }) })} style={{ border: '1px dashed #cbd5e1', background: 'none', borderRadius: 6, color: '#6b7280', cursor: 'pointer', fontSize: 12, padding: '5px 10px', marginTop: 6 }}>+ 할 일 추가</button>
+          )}
         </div>
       )}
 
@@ -217,6 +275,7 @@ export default function Home() {
       <div style={{ fontSize: 10, fontWeight: 700, color: '#8e8e93', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 10 }}>📁 진행 중 프로젝트</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10, marginBottom: 24 }}>
         {active.map(p => {
+          const idx = pIndex(p)
           const d = daysUntil(p.deadline)
           const rl = riskLevel(p)
           const borderColor = rl === 'critical' || rl === 'overdue' ? '#fca5a5' : rl === 'warning' ? '#fde68a' : '#e8e8e8'
@@ -235,9 +294,24 @@ export default function Home() {
               <div style={{ background: '#f0f0f0', borderRadius: 4, height: 4, marginBottom: 4, overflow: 'hidden' }}>
                 <div style={{ height: '100%', background: rl === 'critical' ? '#dc2626' : rl === 'warning' ? '#ea580c' : '#1c1c1e', borderRadius: 4, width: `${p.progress}%`, transition: 'width .3s' }} />
               </div>
-              <div style={{ fontSize: 10, color: '#bbb', textAlign: 'right', marginBottom: 4 }}>진행 {p.progress}%</div>
+              {edit ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, color: '#8e8e93' }}>진행</span>
+                  <input type="number" min="0" max="100" value={p.progress} onChange={e => mutate(n => { n.projects[idx].progress = Math.max(0, Math.min(100, Number(e.target.value) || 0)) })} style={{ width: 54, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 4, padding: '2px 5px', textAlign: 'right' }} />
+                  <span style={{ fontSize: 10, color: '#8e8e93' }}>%</span>
+                </div>
+              ) : (
+                <div style={{ fontSize: 10, color: '#bbb', textAlign: 'right', marginBottom: 4 }}>진행 {p.progress}%</div>
+              )}
 
-              <TaskList tasks={p.tasks} />
+              <TaskRows
+                tasks={p.tasks}
+                edit={edit}
+                onToggle={() => {}}
+                onEdit={(i, v) => mutate(n => { n.projects[idx].tasks[i] = v })}
+                onDelete={(i) => mutate(n => { n.projects[idx].tasks.splice(i, 1) })}
+                onAdd={() => mutate(n => { if (!n.projects[idx].tasks) n.projects[idx].tasks = []; n.projects[idx].tasks.push('') })}
+              />
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #f5f5f5', paddingTop: 8, marginTop: 8 }}>
                 <div style={{ display: 'flex', gap: 5 }}>
@@ -249,7 +323,11 @@ export default function Home() {
                   )}
                 </div>
                 {net && (
-                  <span style={{ fontSize: 11, color: '#8e8e93' }}>{fmtWon(net)}{p.vat_sep ? ' +VAT' : ''}</span>
+                  edit ? (
+                    <button onClick={() => mutate(n => { n.projects[idx].settled = !n.projects[idx].settled })} style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 4, border: 'none', cursor: 'pointer', background: p.settled ? '#d1fae5' : '#fff7ed', color: p.settled ? '#059669' : '#ea580c' }}>{p.settled ? '정산완료' : '미정산'}</button>
+                  ) : (
+                    <span style={{ fontSize: 11, color: '#8e8e93' }}>{fmtWon(net)}{p.vat_sep ? ' +VAT' : ''}</span>
+                  )
                 )}
               </div>
             </div>
@@ -277,6 +355,20 @@ export default function Home() {
           <span>{fmtWon(totalBudget)}</span>
         </div>
       </div>
+
+      {/* Save bar */}
+      {(dirty || msg) && (
+        <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, background: 'rgba(255,255,255,.96)', borderTop: '1px solid #e8e8e8', padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, backdropFilter: 'blur(8px)', zIndex: 50 }}>
+          <span style={{ fontSize: 12, color: msg ? (msg.ok ? '#059669' : '#dc2626') : '#8e8e93' }}>
+            {msg ? msg.text : '저장하지 않은 변경사항이 있어요'}
+          </span>
+          {dirty && (
+            <button onClick={save} disabled={saving} style={{ fontSize: 13, fontWeight: 700, padding: '8px 18px', borderRadius: 8, border: 'none', background: saving ? '#9ca3af' : '#2563eb', color: '#fff', cursor: saving ? 'default' : 'pointer' }}>
+              {saving ? '저장 중…' : '저장'}
+            </button>
+          )}
+        </div>
+      )}
 
     </div>
   )
