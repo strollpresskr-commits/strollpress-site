@@ -45,6 +45,29 @@ function riskLevel(p) {
   return 'ok'
 }
 
+function TodoItem({ storageKey, text, tag, defaultDone, first }) {
+  const [done, setDone] = useState(() => {
+    try {
+      const v = localStorage.getItem(storageKey)
+      return v === null ? !!defaultDone : v === '1'
+    } catch { return !!defaultDone }
+  })
+  const toggle = () => {
+    const nv = !done
+    setDone(nv)
+    try { localStorage.setItem(storageKey, nv ? '1' : '0') } catch {}
+  }
+  return (
+    <div onClick={toggle} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', cursor: 'pointer', borderTop: first ? 'none' : '1px solid #f2f2f2', userSelect: 'none' }}>
+      <div style={{ width: 17, height: 17, borderRadius: 5, border: done ? 'none' : '1.5px solid #cbd5e1', background: done ? '#2563eb' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {done && <span style={{ color: '#fff', fontSize: 11, fontWeight: 800, lineHeight: 1 }}>✓</span>}
+      </div>
+      <span style={{ flex: 1, fontSize: 13, color: done ? '#b8b8bd' : '#1c1c1e', textDecoration: done ? 'line-through' : 'none' }}>{text}</span>
+      {tag && <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5, flexShrink: 0 }}>{tag}</span>}
+    </div>
+  )
+}
+
 function TaskList({ tasks }) {
   const [expanded, setExpanded] = useState(false)
   if (!tasks || tasks.length === 0) return null
@@ -115,10 +138,23 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Today's items */}
+      {/* Brain-dump todos */}
+      {data.todos && data.todos.items && data.todos.items.length > 0 && (
+        <div style={{ background: '#fff', border: '1.5px solid #e8e8e8', borderRadius: 10, padding: '12px 16px 8px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#8e8e93', letterSpacing: '.06em' }}>📝 오늘 할 일</div>
+            {data.todos.date && <div style={{ fontSize: 10, color: '#c7c7cc' }}>{data.todos.date.slice(5).replace('-', '/')}</div>}
+          </div>
+          {data.todos.items.map((t, i) => (
+            <TodoItem key={i} storageKey={`todo_${data.todos.date}_${i}`} text={t.text} tag={t.tag} defaultDone={t.done} first={i === 0} />
+          ))}
+        </div>
+      )}
+
+      {/* Today's schedule */}
       {todayItems.length > 0 && (
         <div style={{ background: '#f0f7ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', letterSpacing: '.06em', marginBottom: 8 }}>📌 오늘 할 것</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', letterSpacing: '.06em', marginBottom: 8 }}>📌 오늘 일정</div>
           {todayItems.map((s, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0', borderTop: i > 0 ? '1px solid rgba(0,0,0,.05)' : 'none' }}>
               <span style={{ fontSize: 13, fontWeight: 500 }}>{s.title}</span>

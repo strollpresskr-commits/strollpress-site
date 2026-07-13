@@ -1,5 +1,18 @@
 {
   "synced_at": "2026-06-15",
+  "todos": {
+    "date": "2026-06-15",
+    "items": [
+      { "text": "교토 미팅 준비", "tag": "스트롤 잡지", "done": false },
+      { "text": "김희선 선생님 연락", "tag": "연락", "done": false },
+      { "text": "고광민 샘 연락 — 강의영상 허가", "tag": "호끌락", "done": false },
+      { "text": "호끌락 팟캐스트 영상 허가", "tag": "호끌락", "done": false },
+      { "text": "김현아 주무관 연락", "tag": "제주 물정책", "done": false },
+      { "text": "명효샘 연락", "tag": "해녀", "done": false },
+      { "text": "ZOOM F3 게인 장치 필요 여부 테스트", "tag": "장비", "done": false },
+      { "text": "액션캠 수중 케이스 확인", "tag": "장비", "done": false }
+    ]
+  },
   "projects": [
     {
       "id": "haenyeo-museum",
@@ -153,8 +166,6 @@
     }
   ],
   "schedule": [
-    { "date": "2026-06-15", "title": "고광민 선생님 강의 영상 허가 확인", "client": "호끌락", "time": "" },
-    { "date": "2026-06-15", "title": "호끌락 팟캐스트 영상 허가 확인", "client": "호끌락", "time": "" },
     { "date": "2026-06-16", "title": "해녀박물관 영상 납품 마감", "client": "고명효 해녀", "time": "" },
     { "date": "2026-06-18", "title": "호끌락 문화학교 5주차", "client": "호끌락", "time": "10:50–13:00" },
     { "date": "2026-06-18", "title": "잇수다 잡지 납품 완료 예정", "client": "잇수다", "time": "" },
