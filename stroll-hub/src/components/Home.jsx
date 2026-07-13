@@ -172,7 +172,7 @@ export default function Home() {
             <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderTop: '1px solid rgba(0,0,0,.05)' }}>
               <div>
                 <span style={{ fontWeight: 500, fontSize: 13 }}>{p.name}</span>
-                <span style={{ color: '#8e8e93', fontSize: 11, marginLeft: 8 }}>D-{daysUntil(p.deadline)} · 진행 {p.progress}%</span>
+                <span style={{ color: '#8e8e93', fontSize: 11, marginLeft: 8 }}>{ddayLabel(daysUntil(p.deadline))} · 진행 {p.progress}%</span>
               </div>
               <span style={{ background: '#fde8e8', color: '#dc2626', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4 }}>위험</span>
             </div>
@@ -186,7 +186,7 @@ export default function Home() {
             <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderTop: '1px solid rgba(0,0,0,.05)' }}>
               <div>
                 <span style={{ fontWeight: 500, fontSize: 13 }}>{p.name}</span>
-                <span style={{ color: '#8e8e93', fontSize: 11, marginLeft: 8 }}>D-{daysUntil(p.deadline)} · 진행 {p.progress}%</span>
+                <span style={{ color: '#8e8e93', fontSize: 11, marginLeft: 8 }}>{ddayLabel(daysUntil(p.deadline))} · 진행 {p.progress}%</span>
               </div>
               <span style={{ background: '#fef3c7', color: '#d97706', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4 }}>주의</span>
             </div>
