@@ -54,7 +54,7 @@ function Check({ done, onClick }) {
   )
 }
 
-function TaskRows({ tasks, edit, onToggle, onEdit, onDelete, onAdd }) {
+function TaskRows({ tasks, edit, isDone, onToggle, onEdit, onDelete, onAdd }) {
   const [expanded, setExpanded] = useState(false)
   const list = tasks || []
   const MAX = 3
@@ -62,9 +62,8 @@ function TaskRows({ tasks, edit, onToggle, onEdit, onDelete, onAdd }) {
   const hidden = list.length - MAX
   return (
     <div style={{ marginTop: 10, borderTop: '1px solid #f0f0f0', paddingTop: 8 }}>
-      {shown.map((t, i) => {
-        const done = typeof t === 'object' ? t.done : false
-        const text = typeof t === 'object' ? t.text : t
+      {shown.map((text, i) => {
+        const done = isDone(i)
         return (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
             <Check done={done} onClick={() => onToggle(i)} />
@@ -92,6 +91,9 @@ export default function Home() {
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState(null)
+  const [doneMap, setDoneMap] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('stroll_done') || '{}') } catch { return {} }
+  })
 
   const now = new Date()
   const todayStr = now.toISOString().slice(0, 10)
@@ -100,6 +102,18 @@ export default function Home() {
   const mutate = (fn) => {
     setData(prev => { const next = structuredClone(prev); fn(next); return next })
     setDirty(true); setMsg(null)
+  }
+
+  // checkbox "done" state persists to this device instantly (localStorage) —
+  // it never needs the git-backed save, unlike text/structure edits above.
+  const isChecked = (key, def) => (key in doneMap ? doneMap[key] : !!def)
+  const toggleChecked = (key, def) => {
+    setDoneMap(prev => {
+      const cur = key in prev ? prev[key] : !!def
+      const next = { ...prev, [key]: !cur }
+      try { localStorage.setItem('stroll_done', JSON.stringify(next)) } catch {}
+      return next
+    })
   }
 
   async function save() {
@@ -186,23 +200,27 @@ export default function Home() {
             <div style={{ fontSize: 10, fontWeight: 700, color: '#8e8e93', letterSpacing: '.06em' }}>📝 오늘 할 일</div>
             {data.todos.date && <div style={{ fontSize: 10, color: '#c7c7cc' }}>{data.todos.date.slice(5).replace('-', '/')}</div>}
           </div>
-          {data.todos.items.map((t, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', borderTop: i === 0 ? 'none' : '1px solid #f2f2f2' }}>
-              <Check done={t.done} onClick={() => mutate(n => { n.todos.items[i].done = !n.todos.items[i].done })} />
-              {edit ? (
-                <>
-                  <input value={t.text} onChange={e => mutate(n => { n.todos.items[i].text = e.target.value })} style={{ flex: 1, fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 7px' }} />
-                  <input value={t.tag || ''} placeholder="태그" onChange={e => mutate(n => { n.todos.items[i].tag = e.target.value })} style={{ width: 72, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 6px' }} />
-                  <button onClick={() => mutate(n => { n.todos.items.splice(i, 1) })} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
-                </>
-              ) : (
-                <>
-                  <span style={{ flex: 1, fontSize: 13, color: t.done ? '#b8b8bd' : '#1c1c1e', textDecoration: t.done ? 'line-through' : 'none' }}>{t.text}</span>
-                  {t.tag && <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>{t.tag}</span>}
-                </>
-              )}
-            </div>
-          ))}
+          {data.todos.items.map((t, i) => {
+            const key = `todo:${data.todos.date}:${i}`
+            const done = isChecked(key, t.done)
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', borderTop: i === 0 ? 'none' : '1px solid #f2f2f2' }}>
+                <Check done={done} onClick={() => toggleChecked(key, t.done)} />
+                {edit ? (
+                  <>
+                    <input value={t.text} onChange={e => mutate(n => { n.todos.items[i].text = e.target.value })} style={{ flex: 1, fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 7px' }} />
+                    <input value={t.tag || ''} placeholder="태그" onChange={e => mutate(n => { n.todos.items[i].tag = e.target.value })} style={{ width: 72, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 6px' }} />
+                    <button onClick={() => mutate(n => { n.todos.items.splice(i, 1) })} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ flex: 1, fontSize: 13, color: done ? '#b8b8bd' : '#1c1c1e', textDecoration: done ? 'line-through' : 'none' }}>{t.text}</span>
+                    {t.tag && <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>{t.tag}</span>}
+                  </>
+                )}
+              </div>
+            )
+          })}
           {edit && (
             <button onClick={() => mutate(n => { n.todos.items.push({ text: '', tag: '', done: false }) })} style={{ border: '1px dashed #cbd5e1', background: 'none', borderRadius: 6, color: '#6b7280', cursor: 'pointer', fontSize: 12, padding: '5px 10px', marginTop: 6 }}>+ 할 일 추가</button>
           )}
@@ -307,7 +325,8 @@ export default function Home() {
               <TaskRows
                 tasks={p.tasks}
                 edit={edit}
-                onToggle={() => {}}
+                isDone={(i) => isChecked(`task:${p.id}:${i}`, false)}
+                onToggle={(i) => toggleChecked(`task:${p.id}:${i}`, false)}
                 onEdit={(i, v) => mutate(n => { n.projects[idx].tasks[i] = v })}
                 onDelete={(i) => mutate(n => { n.projects[idx].tasks.splice(i, 1) })}
                 onAdd={() => mutate(n => { if (!n.projects[idx].tasks) n.projects[idx].tasks = []; n.projects[idx].tasks.push('') })}

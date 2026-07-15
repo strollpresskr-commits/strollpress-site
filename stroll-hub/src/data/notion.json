@@ -1,5 +1,5 @@
 {
-  "synced_at": "2026-06-15",
+  "synced_at": "2026-07-15",
   "todos": {
     "date": "2026-06-15",
     "items": [
@@ -26,11 +26,9 @@
       "vat_sep": false,
       "deduction": null,
       "settled": false,
-      "progress": 50,
+      "progress": 100,
       "tasks": [
-        "영상 완성",
-        "납품 (오늘~내일)",
-        "총서 제작·전시 가능 여부 동시 확인"
+        "인스타 공개"
       ],
       "artifact": null,
       "notion_url": null
@@ -47,13 +45,11 @@
       "vat_sep": false,
       "deduction": null,
       "settled": false,
-      "progress": 70,
+      "progress": 100,
       "tasks": [
-        "지하수연구센터 물리검층 촬영 (6/19)",
-        "한라산 이끼폭포 인서트",
-        "어승생 저수지 빗물 파문 인서트",
-        "편집",
-        "납품 (6/26)"
+        "대금 처리",
+        "숏폼 영상 공유",
+        "원본영상 공유"
       ],
       "artifact": "/artifacts/jeju-water-project.html",
       "notion_url": "https://app.notion.com/p/3650a6c11b4b8133ab1bcdccfe071459"
@@ -70,12 +66,10 @@
       "vat_sep": true,
       "deduction": null,
       "settled": false,
-      "progress": 40,
+      "progress": 90,
       "tasks": [
-        "편집 1차",
-        "클라이언트 검수 및 피드백",
-        "최종 수정",
-        "납품 (6/20)"
+        "선생님께 연락하기",
+        "최종 납품"
       ],
       "artifact": "/artifacts/hareecho-concept-board.html",
       "notion_url": null
@@ -92,8 +86,10 @@
       "vat_sep": false,
       "deduction": { "label": "인쇄비", "amount": 3000000 },
       "settled": false,
-      "progress": 95,
+      "progress": 100,
       "tasks": [
+        "인스타 편집 후기 순차 공개",
+        "다음 호 미팅 준비",
         "정산"
       ],
       "artifact": null,
@@ -113,12 +109,7 @@
       "settled": false,
       "progress": 8,
       "tasks": [
-        "고광민 선생님 강의 영상 허가 확인",
-        "호끌락 팟캐스트 영상 허가 확인",
-        "5주차 촬영 (6/18)",
-        "6주차 촬영 (6/25)",
-        "수지쌤 인터뷰 편집 업로드",
-        "문봉순 선생님 해설 영상 편집 업로드"
+        "내일 촬영 준비 (7/16)"
       ],
       "artifact": null,
       "notion_url": null
@@ -166,6 +157,7 @@
     }
   ],
   "schedule": [
+    { "date": "2026-07-16", "title": "호끌락 문화학교 촬영", "client": "호끌락", "time": "" },
     { "date": "2026-06-16", "title": "해녀박물관 영상 납품 마감", "client": "고명효 해녀", "time": "" },
     { "date": "2026-06-18", "title": "호끌락 문화학교 5주차", "client": "호끌락", "time": "10:50–13:00" },
     { "date": "2026-06-18", "title": "잇수다 잡지 납품 완료 예정", "client": "잇수다", "time": "" },
