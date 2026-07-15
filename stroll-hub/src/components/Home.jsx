@@ -56,32 +56,105 @@ function Check({ done, onClick }) {
 
 function TaskRows({ tasks, edit, isDone, onToggle, onEdit, onDelete, onAdd }) {
   const [expanded, setExpanded] = useState(false)
+  const [showDone, setShowDone] = useState(false)
   const list = tasks || []
+
+  if (edit) {
+    return (
+      <div style={{ marginTop: 10, borderTop: '1px solid #f0f0f0', paddingTop: 8 }}>
+        {list.map((text, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
+            <Check done={isDone(i)} onClick={() => onToggle(i)} />
+            <input value={text} onChange={e => onEdit(i, e.target.value)} style={{ flex: 1, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 4, padding: '3px 6px' }} />
+            <button onClick={() => onDelete(i)} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '0 4px' }}>×</button>
+          </div>
+        ))}
+        <button onClick={onAdd} style={{ border: '1px dashed #cbd5e1', background: 'none', borderRadius: 5, color: '#6b7280', cursor: 'pointer', fontSize: 11, padding: '3px 8px', marginTop: 4 }}>+ 항목</button>
+      </div>
+    )
+  }
+
+  const indexed = list.map((text, i) => ({ text, i }))
+  const undone = indexed.filter(x => !isDone(x.i))
+  const doneItems = indexed.filter(x => isDone(x.i))
   const MAX = 3
-  const shown = edit || expanded ? list : list.slice(0, MAX)
-  const hidden = list.length - MAX
+  const shownUndone = expanded ? undone : undone.slice(0, MAX)
+  const hiddenUndone = undone.length - MAX
+
   return (
     <div style={{ marginTop: 10, borderTop: '1px solid #f0f0f0', paddingTop: 8 }}>
-      {shown.map((text, i) => {
-        const done = isDone(i)
-        return (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
-            <Check done={done} onClick={() => onToggle(i)} />
-            {edit ? (
-              <input value={text} onChange={e => onEdit(i, e.target.value)} style={{ flex: 1, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 4, padding: '3px 6px' }} />
-            ) : (
-              <span style={{ flex: 1, fontSize: 11, color: done ? '#b8b8bd' : '#555', textDecoration: done ? 'line-through' : 'none' }}>{text}</span>
-            )}
-            {edit && <button onClick={() => onDelete(i)} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '0 4px' }}>×</button>}
-          </div>
-        )
-      })}
-      {edit ? (
-        <button onClick={onAdd} style={{ border: '1px dashed #cbd5e1', background: 'none', borderRadius: 5, color: '#6b7280', cursor: 'pointer', fontSize: 11, padding: '3px 8px', marginTop: 4 }}>+ 항목</button>
-      ) : (!expanded && hidden > 0 && (
-        <button onClick={() => setExpanded(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#8e8e93', padding: '2px 0', marginTop: 2 }}>+ {hidden}개 더 보기</button>
+      {shownUndone.map(({ text, i }) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
+          <Check done={false} onClick={() => onToggle(i)} />
+          <span style={{ flex: 1, fontSize: 11, color: '#555' }}>{text}</span>
+        </div>
       ))}
+      {!expanded && hiddenUndone > 0 && (
+        <button onClick={() => setExpanded(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#8e8e93', padding: '2px 0', marginTop: 2 }}>+ {hiddenUndone}개 더 보기</button>
+      )}
+      {doneItems.length > 0 && (
+        <div style={{ marginTop: 4 }}>
+          <button onClick={() => setShowDone(s => !s)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 10, color: '#a3a3a3', padding: '2px 0' }}>{showDone ? '▾' : '▸'} 완료 {doneItems.length}개</button>
+          {showDone && doneItems.map(({ text, i }) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 0' }}>
+              <Check done={true} onClick={() => onToggle(i)} />
+              <span style={{ flex: 1, fontSize: 11, color: '#b8b8bd', textDecoration: 'line-through' }}>{text}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
+  )
+}
+
+function TodoList({ items, edit, isDone, onToggle, onEditText, onEditTag, onDelete, onAdd }) {
+  const [showDone, setShowDone] = useState(false)
+
+  if (edit) {
+    return (
+      <>
+        {items.map((t, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', borderTop: i === 0 ? 'none' : '1px solid #f2f2f2' }}>
+            <Check done={isDone(i)} onClick={() => onToggle(i)} />
+            <input value={t.text} onChange={e => onEditText(i, e.target.value)} style={{ flex: 1, fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 7px' }} />
+            <input value={t.tag || ''} placeholder="태그" onChange={e => onEditTag(i, e.target.value)} style={{ width: 72, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 6px' }} />
+            <button onClick={() => onDelete(i)} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
+          </div>
+        ))}
+        <button onClick={onAdd} style={{ border: '1px dashed #cbd5e1', background: 'none', borderRadius: 6, color: '#6b7280', cursor: 'pointer', fontSize: 12, padding: '5px 10px', marginTop: 6 }}>+ 할 일 추가</button>
+      </>
+    )
+  }
+
+  const indexed = items.map((t, i) => ({ t, i }))
+  const undone = indexed.filter(x => !isDone(x.i))
+  const doneItems = indexed.filter(x => isDone(x.i))
+
+  return (
+    <>
+      {undone.map(({ t, i }) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', borderTop: i === 0 ? 'none' : '1px solid #f2f2f2' }}>
+          <Check done={false} onClick={() => onToggle(i)} />
+          <span style={{ flex: 1, fontSize: 13, color: '#1c1c1e' }}>{t.text}</span>
+          {t.tag && <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>{t.tag}</span>}
+        </div>
+      ))}
+      {undone.length === 0 && (
+        <div style={{ fontSize: 12, color: '#a3a3a3', padding: '8px 0' }}>오늘 할 일 다 끝냈어요 🎉</div>
+      )}
+      {doneItems.length > 0 && (
+        <div style={{ marginTop: 2, borderTop: '1px solid #f2f2f2', paddingTop: 4 }}>
+          <button onClick={() => setShowDone(s => !s)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: '#a3a3a3', padding: '4px 0' }}>{showDone ? '▾' : '▸'} 완료 {doneItems.length}개</button>
+          {showDone && doneItems.map(({ t, i }) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '5px 0' }}>
+              <Check done={true} onClick={() => onToggle(i)} />
+              <span style={{ flex: 1, fontSize: 13, color: '#b8b8bd', textDecoration: 'line-through' }}>{t.text}</span>
+              {t.tag && <span style={{ fontSize: 10, fontWeight: 600, color: '#d4d4d8', background: '#f9fafb', padding: '2px 8px', borderRadius: 5 }}>{t.tag}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </>
   )
 }
 
@@ -200,30 +273,16 @@ export default function Home() {
             <div style={{ fontSize: 10, fontWeight: 700, color: '#8e8e93', letterSpacing: '.06em' }}>📝 오늘 할 일</div>
             {data.todos.date && <div style={{ fontSize: 10, color: '#c7c7cc' }}>{data.todos.date.slice(5).replace('-', '/')}</div>}
           </div>
-          {data.todos.items.map((t, i) => {
-            const key = `todo:${data.todos.date}:${i}`
-            const done = isChecked(key, t.done)
-            return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '7px 0', borderTop: i === 0 ? 'none' : '1px solid #f2f2f2' }}>
-                <Check done={done} onClick={() => toggleChecked(key, t.done)} />
-                {edit ? (
-                  <>
-                    <input value={t.text} onChange={e => mutate(n => { n.todos.items[i].text = e.target.value })} style={{ flex: 1, fontSize: 13, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 7px' }} />
-                    <input value={t.tag || ''} placeholder="태그" onChange={e => mutate(n => { n.todos.items[i].tag = e.target.value })} style={{ width: 72, fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 5, padding: '4px 6px' }} />
-                    <button onClick={() => mutate(n => { n.todos.items.splice(i, 1) })} style={{ border: 'none', background: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
-                  </>
-                ) : (
-                  <>
-                    <span style={{ flex: 1, fontSize: 13, color: done ? '#b8b8bd' : '#1c1c1e', textDecoration: done ? 'line-through' : 'none' }}>{t.text}</span>
-                    {t.tag && <span style={{ fontSize: 10, fontWeight: 600, color: '#6b7280', background: '#f3f4f6', padding: '2px 8px', borderRadius: 5 }}>{t.tag}</span>}
-                  </>
-                )}
-              </div>
-            )
-          })}
-          {edit && (
-            <button onClick={() => mutate(n => { n.todos.items.push({ text: '', tag: '', done: false }) })} style={{ border: '1px dashed #cbd5e1', background: 'none', borderRadius: 6, color: '#6b7280', cursor: 'pointer', fontSize: 12, padding: '5px 10px', marginTop: 6 }}>+ 할 일 추가</button>
-          )}
+          <TodoList
+            items={data.todos.items}
+            edit={edit}
+            isDone={(i) => isChecked(`todo:${data.todos.date}:${i}`, data.todos.items[i].done)}
+            onToggle={(i) => toggleChecked(`todo:${data.todos.date}:${i}`, data.todos.items[i].done)}
+            onEditText={(i, v) => mutate(n => { n.todos.items[i].text = v })}
+            onEditTag={(i, v) => mutate(n => { n.todos.items[i].tag = v })}
+            onDelete={(i) => mutate(n => { n.todos.items.splice(i, 1) })}
+            onAdd={() => mutate(n => { n.todos.items.push({ text: '', tag: '', done: false }) })}
+          />
         </div>
       )}
 
