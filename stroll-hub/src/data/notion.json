@@ -13,6 +13,30 @@
       { "text": "액션캠 수중 케이스 확인", "tag": "장비", "done": false }
     ]
   },
+  "content_queue": {
+    "items": [
+      { "text": "해녀박물관 전시영상", "tag": "해녀", "done": false },
+      { "text": "물정책과 홍보영상", "tag": "제주 물정책", "done": false },
+      { "text": "하례초 뮤비", "tag": "하례초", "done": false },
+      { "text": "호끌락 콘텐츠", "tag": "호끌락", "done": false },
+      { "text": "잇수다", "tag": "잇수다", "done": false },
+      { "text": "고광민 선생님 강의", "tag": "호끌락", "done": false },
+      { "text": "산지천 갤러리 토크", "tag": "아카이브", "done": false },
+      { "text": "비공식 시방서", "tag": "아카이브", "done": false },
+      { "text": "교토 레지던시", "tag": "아카이브", "done": false },
+      { "text": "제주 문화가 있는날", "tag": "아카이브", "done": false },
+      { "text": "김보향 선생님 구술채록", "tag": "아카이브", "done": false },
+      { "text": "종달리 잠수굿", "tag": "아카이브", "done": false },
+      { "text": "문봉순 선생님 용천수 답사", "tag": "아카이브", "done": false },
+      { "text": "페이퍼룸 리소 워크숍", "tag": "아카이브", "done": false },
+      { "text": "제주도청 과장님 인터뷰", "tag": "제주 물정책", "done": false },
+      { "text": "해녀박물관 오프닝", "tag": "해녀", "done": false },
+      { "text": "잇수다 배송", "tag": "잇수다", "done": false },
+      { "text": "작년·재작년 교토·도쿄 아카이브", "tag": "아카이브", "done": false },
+      { "text": "고광민 선생님 전시 인수·바구니 미팅", "tag": "호끌락", "done": false },
+      { "text": "지하수관정조사 — 어승생 수원지", "tag": "제주 물정책", "done": false }
+    ]
+  },
   "projects": [
     {
       "id": "haenyeo-museum",

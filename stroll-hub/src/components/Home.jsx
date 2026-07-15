@@ -38,6 +38,7 @@ function fmtWon(n) {
 }
 
 function riskLevel(p) {
+  if (p.progress >= 100) return 'done'
   const d = daysUntil(p.deadline)
   if (d === null) return 'none'
   if (d < 0) return 'overdue'
@@ -107,7 +108,7 @@ function TaskRows({ tasks, edit, isDone, onToggle, onEdit, onDelete, onAdd }) {
   )
 }
 
-function TodoList({ items, edit, isDone, onToggle, onEditText, onEditTag, onDelete, onAdd }) {
+function TodoList({ items, edit, isDone, onToggle, onEditText, onEditTag, onDelete, onAdd, emptyText = '오늘 할 일 다 끝냈어요 🎉' }) {
   const [showDone, setShowDone] = useState(false)
 
   if (edit) {
@@ -140,7 +141,7 @@ function TodoList({ items, edit, isDone, onToggle, onEditText, onEditTag, onDele
         </div>
       ))}
       {undone.length === 0 && (
-        <div style={{ fontSize: 12, color: '#a3a3a3', padding: '8px 0' }}>오늘 할 일 다 끝냈어요 🎉</div>
+        <div style={{ fontSize: 12, color: '#a3a3a3', padding: '8px 0' }}>{emptyText}</div>
       )}
       {doneItems.length > 0 && (
         <div style={{ marginTop: 2, borderTop: '1px solid #f2f2f2', paddingTop: 4 }}>
@@ -286,6 +287,24 @@ export default function Home() {
         </div>
       )}
 
+      {/* Content publishing queue */}
+      {data.content_queue && data.content_queue.items && (
+        <div style={{ background: '#fff', border: '1.5px solid #e8e8e8', borderRadius: 10, padding: '12px 16px 8px', marginBottom: 16 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: '#8e8e93', letterSpacing: '.06em', marginBottom: 4 }}>🎬 온라인 공유 콘텐츠</div>
+          <TodoList
+            items={data.content_queue.items}
+            edit={edit}
+            isDone={(i) => isChecked(`content:${i}`, data.content_queue.items[i].done)}
+            onToggle={(i) => toggleChecked(`content:${i}`, data.content_queue.items[i].done)}
+            onEditText={(i, v) => mutate(n => { n.content_queue.items[i].text = v })}
+            onEditTag={(i, v) => mutate(n => { n.content_queue.items[i].tag = v })}
+            onDelete={(i) => mutate(n => { n.content_queue.items.splice(i, 1) })}
+            onAdd={() => mutate(n => { n.content_queue.items.push({ text: '', tag: '', done: false }) })}
+            emptyText="공유할 콘텐츠 다 올렸어요 🎉"
+          />
+        </div>
+      )}
+
       {/* Today's schedule */}
       {todayItems.length > 0 && (
         <div style={{ background: '#f0f7ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
@@ -361,7 +380,9 @@ export default function Home() {
             <div key={p.id} style={{ background: '#fff', border: `1.5px solid ${borderColor}`, borderRadius: 10, padding: '14px 16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, flex: 1, lineHeight: 1.35 }}>{p.name}</div>
-                {d !== null && (
+                {rl === 'done' ? (
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: '#d1fae5', color: '#059669', flexShrink: 0, marginLeft: 8 }}>완료</span>
+                ) : d !== null && (
                   <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 4, background: d <= 7 ? '#fee2e2' : d <= 14 ? '#ffedd5' : '#dbeafe', color: ddayColor(d), flexShrink: 0, marginLeft: 8 }}>{ddayLabel(d)}</span>
                 )}
               </div>
