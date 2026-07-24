@@ -1,16 +1,18 @@
 {
-  "synced_at": "2026-07-15",
+  "synced_at": "2026-07-24",
   "todos": {
-    "date": "2026-06-15",
+    "date": "2026-07-24",
     "items": [
-      { "text": "교토 미팅 준비", "tag": "스트롤 잡지", "done": false },
-      { "text": "김희선 선생님 연락", "tag": "연락", "done": false },
-      { "text": "고광민 샘 연락 — 강의영상 허가", "tag": "호끌락", "done": false },
-      { "text": "호끌락 팟캐스트 영상 허가", "tag": "호끌락", "done": false },
-      { "text": "김현아 주무관 연락", "tag": "제주 물정책", "done": false },
-      { "text": "명효샘 연락", "tag": "해녀", "done": false },
-      { "text": "ZOOM F3 게인 장치 필요 여부 테스트", "tag": "장비", "done": false },
-      { "text": "액션캠 수중 케이스 확인", "tag": "장비", "done": false }
+      { "text": "교토 프로필 사진 추가", "tag": "스몰워크", "done": false },
+      { "text": "물정책 추가 영상 보내주기", "tag": "스몰워크", "done": false },
+      { "text": "물정책 증빙자료 확인", "tag": "스몰워크", "done": false },
+      { "text": "송정희 선생님 영상 확인", "tag": "스몰워크", "done": false },
+      { "text": "호끌락 스토리 올리기", "tag": "스몰워크", "done": false },
+      { "text": "호끌락 영상 사용 문의하기", "tag": "스몰워크", "done": false },
+      { "text": "LH에 계약한다고 전화하기", "tag": "스몰워크", "done": false },
+      { "text": "비공식 시방서 영상 편집", "tag": "본격", "done": false },
+      { "text": "고광민 선생님 강의 마저 업로드", "tag": "본격", "done": false },
+      { "text": "상창리 인터뷰 영상 공유하기", "tag": "본격", "done": false }
     ]
   },
   "content_queue": {
