@@ -3,16 +3,12 @@
   "todos": {
     "date": "2026-07-24",
     "items": [
-      { "text": "교토 프로필 사진 추가", "tag": "스몰워크", "done": false },
-      { "text": "물정책 추가 영상 보내주기", "tag": "스몰워크", "done": false },
-      { "text": "물정책 증빙자료 확인", "tag": "스몰워크", "done": false },
-      { "text": "송정희 선생님 영상 확인", "tag": "스몰워크", "done": false },
-      { "text": "호끌락 스토리 올리기", "tag": "스몰워크", "done": false },
-      { "text": "호끌락 영상 사용 문의하기", "tag": "스몰워크", "done": false },
-      { "text": "LH에 계약한다고 전화하기", "tag": "스몰워크", "done": false },
-      { "text": "비공식 시방서 영상 편집", "tag": "본격", "done": false },
-      { "text": "고광민 선생님 강의 마저 업로드", "tag": "본격", "done": false },
-      { "text": "상창리 인터뷰 영상 공유하기", "tag": "본격", "done": false }
+      { "text": "상창리 영상편집", "tag": "편집", "done": false },
+      { "text": "LH 서류준비", "tag": "LH", "done": false },
+      { "text": "동홍동 이사준비", "tag": "이사", "done": false },
+      { "text": "제주문화예술재단 임대료 지원", "tag": "지원사업", "done": false },
+      { "text": "비공식 시방서 영상 편집", "tag": "아카이브", "done": false },
+      { "text": "고광민 선생님 팟캐스트 편집", "tag": "호끌락", "done": false }
     ]
   },
   "content_queue": {
