@@ -3,10 +3,14 @@
   "todos": {
     "date": "2026-07-24",
     "items": [
+      { "text": "LH 계약금 납부", "tag": "LH", "done": false },
+      { "text": "LH 신청서 준비", "tag": "LH", "done": false },
+      { "text": "제주문화예술재단 지원 서류 작성", "tag": "지원사업", "done": false },
+      { "text": "편의점 내려가서 동의 받기", "tag": "지원사업", "done": false },
+      { "text": "집주인에게 이사 통보", "tag": "이사", "done": false },
+      { "text": "부동산에 이사 연락", "tag": "이사", "done": false },
+      { "text": "화장실 전구·장판 수리 의뢰", "tag": "이사", "done": false },
       { "text": "상창리 영상편집", "tag": "편집", "done": false },
-      { "text": "LH 서류준비", "tag": "LH", "done": false },
-      { "text": "동홍동 이사준비", "tag": "이사", "done": false },
-      { "text": "제주문화예술재단 임대료 지원", "tag": "지원사업", "done": false },
       { "text": "비공식 시방서 영상 편집", "tag": "아카이브", "done": false },
       { "text": "고광민 선생님 팟캐스트 편집", "tag": "호끌락", "done": false }
     ]
