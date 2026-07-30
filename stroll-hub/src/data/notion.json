@@ -1,0 +1,192 @@
+{
+  "synced_at": "2026-07-29",
+  "todos": {
+    "date": "2026-07-29",
+    "items": [
+      { "text": "비공식 시방서 영상 편집", "tag": "아카이브", "done": false },
+      { "text": "편의점 연세 계약", "tag": "이사", "done": false },
+      { "text": "임대차계약서 수정 작성", "tag": "이사", "done": false },
+      { "text": "제주문화예술재단 서류 작성", "tag": "지원사업", "done": false }
+    ]
+  },
+  "content_queue": {
+    "items": [
+      { "text": "해녀박물관 전시영상", "tag": "해녀", "done": false },
+      { "text": "물정책과 홍보영상", "tag": "제주 물정책", "done": false },
+      { "text": "하례초 뮤비", "tag": "하례초", "done": false },
+      { "text": "호끌락 콘텐츠", "tag": "호끌락", "done": false },
+      { "text": "잇수다", "tag": "잇수다", "done": false },
+      { "text": "고광민 선생님 강의", "tag": "호끌락", "done": false },
+      { "text": "산지천 갤러리 토크", "tag": "아카이브", "done": false },
+      { "text": "비공식 시방서", "tag": "아카이브", "done": false },
+      { "text": "교토 레지던시", "tag": "아카이브", "done": false },
+      { "text": "제주 문화가 있는날", "tag": "아카이브", "done": false },
+      { "text": "김보향 선생님 구술채록", "tag": "아카이브", "done": false },
+      { "text": "종달리 잠수굿", "tag": "아카이브", "done": false },
+      { "text": "문봉순 선생님 용천수 답사", "tag": "아카이브", "done": false },
+      { "text": "페이퍼룸 리소 워크숍", "tag": "아카이브", "done": false },
+      { "text": "제주도청 과장님 인터뷰", "tag": "제주 물정책", "done": false },
+      { "text": "해녀박물관 오프닝", "tag": "해녀", "done": false },
+      { "text": "잇수다 배송", "tag": "잇수다", "done": false },
+      { "text": "작년·재작년 교토·도쿄 아카이브", "tag": "아카이브", "done": false },
+      { "text": "고광민 선생님 전시 인수·바구니 미팅", "tag": "호끌락", "done": false },
+      { "text": "지하수관정조사 — 어승생 수원지", "tag": "제주 물정책", "done": false }
+    ]
+  },
+  "projects": [
+    {
+      "id": "haenyeo-museum",
+      "name": "해녀박물관 홍보영상",
+      "client": "고명효 해녀",
+      "status": "진행중",
+      "category": "외주",
+      "type": ["영상"],
+      "deadline": "2026-06-16",
+      "budget": null,
+      "vat_sep": false,
+      "deduction": null,
+      "settled": false,
+      "progress": 100,
+      "tasks": [
+        "인스타 공개"
+      ],
+      "artifact": null,
+      "notion_url": null
+    },
+    {
+      "id": "jeju-water",
+      "name": "제주도청 물정책과 홍보영상",
+      "client": "제주도청 물정책과",
+      "status": "진행중",
+      "category": "외주",
+      "type": ["영상"],
+      "deadline": "2026-06-26",
+      "budget": 15000000,
+      "vat_sep": false,
+      "deduction": null,
+      "settled": false,
+      "progress": 100,
+      "tasks": [
+        "대금 처리",
+        "숏폼 영상 공유",
+        "원본영상 공유"
+      ],
+      "artifact": "/artifacts/jeju-water-project.html",
+      "notion_url": "https://app.notion.com/p/3650a6c11b4b8133ab1bcdccfe071459"
+    },
+    {
+      "id": "hareecho-mv",
+      "name": "하례초 홍보 뮤직비디오",
+      "client": "하례초",
+      "status": "진행중",
+      "category": "외주",
+      "type": ["영상"],
+      "deadline": "2026-06-20",
+      "budget": 2000000,
+      "vat_sep": true,
+      "deduction": null,
+      "settled": false,
+      "progress": 90,
+      "tasks": [
+        "선생님께 연락하기",
+        "최종 납품"
+      ],
+      "artifact": "/artifacts/hareecho-concept-board.html",
+      "notion_url": null
+    },
+    {
+      "id": "itsuda",
+      "name": "잇수다 잡지 제작",
+      "client": "잇수다",
+      "status": "진행중",
+      "category": "외주",
+      "type": ["편집디자인", "인쇄/제작"],
+      "deadline": "2026-06-18",
+      "budget": 9000000,
+      "vat_sep": false,
+      "deduction": { "label": "인쇄비", "amount": 3000000 },
+      "settled": false,
+      "progress": 100,
+      "tasks": [
+        "인스타 편집 후기 순차 공개",
+        "다음 호 미팅 준비",
+        "정산"
+      ],
+      "artifact": null,
+      "notion_url": null
+    },
+    {
+      "id": "hookrak",
+      "name": "호끌락 문화학교",
+      "client": "호끌락",
+      "status": "진행중",
+      "category": "외주",
+      "type": ["영상"],
+      "deadline": "2026-07-09",
+      "budget": 1000000,
+      "vat_sep": false,
+      "deduction": null,
+      "settled": false,
+      "progress": 8,
+      "tasks": [
+        "내일 촬영 준비 (7/16)"
+      ],
+      "artifact": null,
+      "notion_url": null
+    },
+    {
+      "id": "haenyeo-chongseo",
+      "name": "해녀 총서 제작",
+      "client": "고명효 해녀",
+      "status": "진행중",
+      "category": "외주",
+      "type": ["편집디자인", "인쇄/제작"],
+      "deadline": null,
+      "budget": null,
+      "vat_sep": false,
+      "deduction": null,
+      "settled": false,
+      "progress": 0,
+      "tasks": [
+        "고명효 해녀 총서 원고 작성",
+        "전체 목차 구성",
+        "전시 가능 여부 확인 (영상 납품 시 동시)"
+      ],
+      "artifact": null,
+      "notion_url": null
+    },
+    {
+      "id": "stroll-magazine",
+      "name": "스트롤 독립잡지",
+      "client": "자체",
+      "status": "진행중",
+      "category": "자체",
+      "type": ["편집디자인", "인쇄/제작"],
+      "deadline": null,
+      "budget": null,
+      "vat_sep": false,
+      "deduction": null,
+      "settled": false,
+      "progress": 5,
+      "tasks": [
+        "전체 목차 구성",
+        "취재 계획 수립"
+      ],
+      "artifact": null,
+      "notion_url": "https://app.notion.com/p/36c0a6c11b4b818c94c8f93bc3c9656b"
+    }
+  ],
+  "schedule": [
+    { "date": "2026-07-31", "title": "LH 제주지역본부 주거복지사업팀 방문 (1층, 신청서 작성)", "client": "LH", "time": "10:00" },
+    { "date": "2026-07-31", "title": "임대차계약서 임차인 추가 (편의점)", "client": "이사", "time": "" },
+    { "date": "2026-07-16", "title": "호끌락 문화학교 촬영", "client": "호끌락", "time": "" },
+    { "date": "2026-06-16", "title": "해녀박물관 영상 납품 마감", "client": "고명효 해녀", "time": "" },
+    { "date": "2026-06-18", "title": "호끌락 문화학교 5주차", "client": "호끌락", "time": "10:50–13:00" },
+    { "date": "2026-06-18", "title": "잇수다 잡지 납품 완료 예정", "client": "잇수다", "time": "" },
+    { "date": "2026-06-19", "title": "제주지하수연구센터 물리검층 촬영", "client": "제주도청", "time": "" },
+    { "date": "2026-06-20", "title": "하례초 뮤비 납품 마감", "client": "하례초", "time": "" },
+    { "date": "2026-06-25", "title": "제주 물정책 클라이언트 검토 마감", "client": "제주도청", "time": "" },
+    { "date": "2026-06-26", "title": "제주 물정책 최종 납품", "client": "제주도청", "time": "" },
+    { "date": "2026-07-09", "title": "호끌락 문화학교 최종 마감", "client": "호끌락", "time": "" }
+  ]
+}

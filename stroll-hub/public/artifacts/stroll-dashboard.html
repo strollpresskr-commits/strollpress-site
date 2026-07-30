@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Stroll Dashboard",
+  "schemaVersion": 1,
+  "description": "STROLL 독립 잡지 제작 대시보드 — Notion 연동. 이슈 파이프라인, 오늘의 작업, 아이디어 풀, 취재원, 시간 기록, 예산·피드백을 한 곳에서 관리. 두 팀원이 같은 Notion 데이터를 공유.",
+  "mcpTools": [
+    "mcp__fb9ff4c5-f66c-4a01-93fd-e9e5856c9409__notion-search",
+    "mcp__fb9ff4c5-f66c-4a01-93fd-e9e5856c9409__notion-create-pages"
+  ],
+  "mcpServerNames": [
+    "Notion",
+    "Notion"
+  ]
+}
+</script>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STROLL 제작 대시보드</title>
+<style>
+:root {
+  color-scheme: light;
+  --black: #111;
+  --white: #faf9f6;
+  --g1: #f0ede8;
+  --g2: #ddd9d3;
+  --g3: #a09a92;
+  --g4: #5c5752;
+  --accent: #c8612a;
+  --al: #f5e8e0;
+  --green: #3a7d5e;
+  --gl: #e0f0e8;
+  --blue: #2d5f8a;
+  --bl: #e0ebf5;
+  --yellow: #c9951a;
+  --yl: #faf3e0;
+  --font: 'Helvetica Neue','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+  --r: 4px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--white); color: var(--black); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+/* HEADER */
+header { border-bottom: 2px solid var(--black); padding: 0 20px; display: flex; align-items: center; justify-content: space-between; height: 52px; background: var(--white); position: sticky; top: 0; z-index: 100; }
+.logo { font-size: 16px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.logo span { color: var(--accent); }
+.header-right { display: flex; align-items: center; gap: 12px; }
+.notion-link { font-size: 11px; color: var(--g3); text-decoration: none; border: 1px solid var(--g2); border-radius: var(--r); padding: 4px 8px; transition: all .15s; }
+.notion-link:hover { color: var(--black); border-color: var(--g3); }
+#hdate { font-size: 11px; color: var(--g3); letter-spacing: .04em; }
+
+/* TABS */
+nav { border-bottom: 1px solid var(--g2); padding: 0 20px; display: flex; background: var(--white); position: sticky; top: 52px; z-index: 99; overflow-x: auto; }
+.tab { padding: 12px 16px; background: none; border: none; border-bottom: 2px solid transparent; font-family: var(--font); font-size: 12px; font-weight: 500; color: var(--g3); cursor: pointer; transition: color .15s, border-color .15s; white-space: nowrap; margin-bottom: -1px; }
+.tab:hover { color: var(--black); }
+.tab.on { color: var(--black); border-bottom-color: var(--accent); font-weight: 700; }
+.tab-count { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--al); color: var(--accent); font-size: 9px; font-weight: 700; margin-left: 5px; vertical-align: middle; }
+
+/* PANELS */
+main { padding: 20px; max-width: 900px; margin: 0 auto; }
+.panel { display: none; }
+.panel.on { display: block; }
+
+/* SECTION HEADER */
+.sh { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.st { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--g3); }
+
+/* BTN */
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border-radius: var(--r); border: none; font-family: var(--font); font-size: 11px; font-weight: 700; cursor: pointer; transition: opacity .15s; letter-spacing: .02em; }
+.btn:hover { opacity: .8; }
+.btn-p { background: var(--black); color: var(--white); }
+.btn-g { background: transparent; border: 1px solid var(--g2); color: var(--g4); }
+.btn-sm { padding: 4px 9px; font-size: 10px; }
+
+/* CARD */
+.card { background: var(--white); border: 1px solid var(--g2); border-radius: var(--r); padding: 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.06); transition: border-color .15s; }
+.card:hover { border-color: var(--g3); }
+
+/* BADGE */
+.badge { display: inline-block; padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: .03em; }
+.b-기획 { background: var(--yl); color: var(--yellow); }
+.b-취재 { background: #fff0e0; color: #c87020; }
+.b-집필 { background: var(--bl); color: var(--blue); }
+.b-편집 { background: #f0e0f5; color: #8a2d8a; }
+.b-디자인 { background: #ffe0f0; color: #c0206a; }
+.b-발행완료 { background: var(--gl); color: var(--green); }
+.b-씨앗 { background: var(--yl); color: var(--yellow); }
+.b-진행중 { background: var(--bl); color: var(--blue); }
+.b-완성 { background: var(--gl); color: var(--green); }
+.b-보류 { background: var(--g1); color: var(--g3); }
+.b-지출 { background: var(--al); color: var(--accent); }
+.b-수입 { background: var(--gl); color: var(--green); }
+
+/* FORM */
+.form-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.38); z-index: 200; align-items: center; justify-content: center; }
+.form-overlay.open { display: flex; }
+.form-box { background: var(--white); border-radius: var(--r); padding: 22px; width: 400px; max-width: 92vw; box-shadow: 0 8px 28px rgba(0,0,0,.16); }
+.form-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; }
+.fr { margin-bottom: 10px; }
+label { display: block; font-size: 10px; font-weight: 700; color: var(--g3); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+input[type=text], input[type=number], input[type=date], textarea, select { width: 100%; padding: 7px 9px; border: 1px solid var(--g2); border-radius: var(--r); font-family: var(--font); font-size: 12px; background: var(--white); color: var(--black); outline: none; }
+input:focus, textarea:focus, select:focus { border-color: var(--black); }
+.fg2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+/* LOADING */
+.loading { text-align: center; padding: 40px; color: var(--g3); font-size: 12px; }
+.loading::before { content: ''; display: block; width: 24px; height: 24px; border: 2px solid var(--g2); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* EMPTY */
+.empty { text-align: center; padding: 36px 20px; color: var(--g3); }
+.empty-icon { font-size: 28px; margin-bottom: 8px; }
+.empty-title { font-size: 13px; font-weight: 600; color: var(--g4); margin-bottom: 4px; }
+.empty-sub { font-size: 11px; }
+
+/* ITEM */
+.item-title { font-size: 13px; font-weight: 600; line-height: 1.4; margin-bottom: 3px; }
+.item-meta { font-size: 11px; color: var(--g3); }
+.item-footer { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.notion-btn { font-size: 10px; color: var(--g3); text-decoration: none; border: 1px solid var(--g2); border-radius: var(--r); padding: 2px 7px; transition: all .15s; }
+.notion-btn:hover { color: var(--black); border-color: var(--g3); }
+
+/* PROGRESS BAR */
+.pb-track { height: 4px; background: var(--g1); border-radius: 2px; overflow: hidden; margin: 6px 0; }
+.pb-fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width .4s; }
+
+/* GRID layouts */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+
+/* TODAY specific */
+.today-grid { display: grid; grid-template-columns: 1fr 240px; gap: 20px; }
+.stat-box { text-align: center; padding: 16px; border: 1px solid var(--g2); border-radius: var(--r); background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.stat-num { font-size: 28px; font-weight: 800; }
+.stat-label { font-size: 10px; color: var(--g3); letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; }
+
+/* Routine */
+.routine-list { list-style: none; }
+.ri { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--g1); font-size: 12px; }
+.ri:last-child { border-bottom: none; }
+.rcheck { width: 16px; height: 16px; border: 1.5px solid var(--g2); border-radius: 3px; cursor: pointer; appearance: none; flex-shrink: 0; position: relative; transition: all .15s; }
+.rcheck:checked { background: var(--green); border-color: var(--green); }
+.rcheck:checked::after { content: ''; position: absolute; left: 3px; top: 0px; width: 5px; height: 9px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg); }
+.rlabel { flex: 1; }
+.rlabel.done { text-decoration: line-through; color: var(--g3); }
+.rtime { font-size: 10px; color: var(--g3); }
+
+/* TASK item */
+.task-card { display: flex; align-items: flex-start; gap: 8px; padding: 10px 12px; border: 1px solid var(--g2); border-radius: var(--r); margin-bottom: 6px; background: var(--white); }
+.task-check { width: 16px; height: 16px; border: 1.5px solid var(--g2); border-radius: 50%; cursor: pointer; appearance: none; flex-shrink: 0; margin-top: 1px; position: relative; transition: all .15s; }
+.task-check:checked { background: var(--accent); border-color: var(--accent); }
+.task-check:checked::after { content: ''; position: absolute; left: 3px; top: 0; width: 5px; height: 9px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg); }
+
+/* DIVIDER */
+.div { height: 1px; background: var(--g2); margin: 18px 0; }
+
+/* BUDGET summary */
+.bsum { border: 1px solid var(--g2); border-radius: var(--r); padding: 16px; background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+.brow { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--g1); font-size: 12px; }
+.brow:last-child { border-bottom: none; }
+.btotal { font-size: 20px; font-weight: 800; }
+
+/* ERR */
+.err-box { background: #fff5f5; border: 1px solid #ffd0d0; border-radius: var(--r); padding: 12px; font-size: 12px; color: #b04040; margin-bottom: 16px; }
+
+@media(max-width:600px) {
+  .today-grid { grid-template-columns: 1fr; }
+  .fg2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">STROLL<span>.</span></div>
+  <div class="header-right">
+    <span id="hdate"></span>
+    <a class="notion-link" href="https://www.notion.so/3610a6c11b4b81c380fec12db8ab18bd" target="_blank">📝 Notion 허브 열기</a>
+  </div>
+</header>
+
+<nav>
+  <button class="tab on" onclick="sw('today',this)">오늘 <span class="tab-count" id="tc-today">—</span></button>
+  <button class="tab" onclick="sw('issues',this)">이슈 <span class="tab-count" id="tc-issues">—</span></button>
+  <button class="tab" onclick="sw('ideas',this)">아이디어 <span class="tab-count" id="tc-ideas">—</span></button>
+  <button class="tab" onclick="sw('sources',this)">취재원 <span class="tab-count" id="tc-sources">—</span></button>
+  <button class="tab" onclick="sw('time',this)">시간 <span class="tab-count" id="tc-time">—</span></button>
+  <button class="tab" onclick="sw('budget',this)">예산·피드백</button>
+</nav>
+
+<main>
+
+<!-- ══ 오늘 ══ -->
+<div class="panel on" id="panel-today">
+  <div class="today-grid">
+    <div>
+      <div class="sh">
+        <span class="st">오늘의 작업</span>
+        <button class="btn btn-p btn-sm" onclick="openF('f-task')">＋ 추가</button>
+      </div>
+      <div id="task-list"><div class="loading"></div></div>
+
+      <div class="div"></div>
+
+      <div class="sh">
+        <span class="st">데일리 루틴</span>
+        <button class="btn btn-g btn-sm" onclick="resetRoutine()">리셋</button>
+      </div>
+      <ul class="routine-list" id="routine-list"></ul>
+    </div>
+
+    <div>
+      <div class="stat-box" style="margin-bottom:10px;">
+        <div class="stat-num" id="pct-today">—</div>
+        <div class="stat-label">오늘 달성률</div>
+        <div class="pb-track" style="margin-top:10px;"><div class="pb-fill" id="pb-today" style="width:0%"></div></div>
+        <div style="font-size:10px;color:var(--g3);margin-top:4px;" id="pct-sub">로딩 중</div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <div class="sh" style="margin-bottom:8px;"><span class="st">진행 중 이슈</span></div>
+        <div id="sidebar-issues"><div style="font-size:11px;color:var(--g3);">로딩 중...</div></div>
+      </div>
+
+      <div>
+        <div class="sh" style="margin-bottom:8px;"><span class="st">이번 주 시간</span></div>
+        <div id="sidebar-time"><div style="font-size:11px;color:var(--g3);">로딩 중...</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 이슈 파이프라인 ══ -->
+<div class="panel" id="panel-issues">
+  <div class="sh">
+    <span class="st">이슈 파이프라인</span>
+    <button class="btn btn-p btn-sm" onclick="openF('f-issue')">＋ 새 이슈</button>
+  </div>
+  <div id="issues-list"><div class="loading"></div></div>
+</div>
+
+<!-- ══ 아이디어 풀 ══ -->
+<div class="panel" id="panel-ideas">
+  <div class="sh">
+    <span class="st">콘텐츠 아이디어 풀</span>
+    <button class="btn btn-p btn-sm" onclick="openF('f-idea')">＋ 추가</button>
+  </div>
+  <div id="ideas-list"><div class="loading"></div></div>
+</div>
+
+<!-- ══ 취재원 ══ -->
+<div class="panel" id="panel-sources">
+  <div class="sh">
+    <span class="st">취재원 · 연락처</span>
+    <button class="btn btn-p btn-sm" onclick="openF('f-source')">＋ 추가</button>
+  </div>
+  <div id="sources-list"><div class="loading"></div></div>
+</div>
+
+<!-- ══ 시간 ══ -->
+<div class="panel" id="panel-time">
+  <div class="sh">
+    <span class="st">시간 기록</span>
+    <button class="btn btn-p btn-sm" onclick="openF('f-time')">＋ 기록</button>
+  </div>
+  <div id="time-list"><div class="loading"></div></div>
+</div>
+
+<!-- ══ 예산·피드백 ══ -->
+<div class="panel" id="panel-budget">
+  <div style="display:grid;grid-template-columns:1fr 220px;gap:20px;margin-bottom:24px;">
+    <div>
+      <div class="sh">
+        <span class="st">예산 트래킹</span>
+        <button class="btn btn-p btn-sm" onclick="openF('f-budget')">＋ 기록</button>
+      </div>
+      <div id="budget-list"><div class="loading"></div></div>
+    </div>
+    <div class="bsum" id="budget-summary" style="align-self:start;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g3);margin-bottom:10px;">요약</div>
+      <div style="font-size:11px;color:var(--g3);">로딩 중...</div>
+    </div>
+  </div>
+
+  <div class="div"></div>
+
+  <div class="sh">
+    <span class="st">독자 피드백</span>
+    <button class="btn btn-p btn-sm" onclick="openF('f-feedback')">＋ 추가</button>
+  </div>
+  <div id="feedback-list"><div class="loading"></div></div>
+</div>
+
+</main>
+
+<!-- ══ FORMS ══ -->
+
+<!-- 작업 추가 -->
+<div class="form-overlay" id="f-task">
+  <div class="form-box">
+    <div class="form-title">작업 추가</div>
+    <div class="fr"><label>작업 내용</label><input type="text" id="ft-text" placeholder="예: 2호 인트로 초고 작성"></div>
+    <div class="fg2">
+      <div class="fr"><label>카테고리</label>
+        <select id="ft-cat"><option>집필</option><option>편집</option><option>리서치</option><option>디자인</option><option>기획</option><option>행정</option><option>기타</option></select>
+      </div>
+      <div class="fr"><label>담당자</label><input type="text" id="ft-who" placeholder="예: 이름"></div>
+    </div>
+    <div class="fr"><label>마감 시각 (선택)</label><input type="text" id="ft-due" placeholder="예: 오후 6시"></div>
+    <div class="form-actions">
+      <button class="btn btn-g" onclick="closeF('f-task')">취소</button>
+      <button class="btn btn-p" onclick="addTask()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 이슈 추가 -->
+<div class="form-overlay" id="f-issue">
+  <div class="form-box">
+    <div class="form-title">새 이슈 등록</div>
+    <div class="fg2">
+      <div class="fr"><label>호수</label><input type="text" id="fi-num" placeholder="예: Vol.3"></div>
+      <div class="fr"><label>제목</label><input type="text" id="fi-title" placeholder="예: 마법의 도시"></div>
+    </div>
+    <div class="fr"><label>테마</label><input type="text" id="fi-theme" placeholder="예: 도시 신화, 골목 이야기"></div>
+    <div class="fg2">
+      <div class="fr"><label>현재 단계</label>
+        <select id="fi-phase"><option>기획</option><option>취재</option><option>집필</option><option>편집</option><option>디자인</option><option>발행완료</option></select>
+      </div>
+      <div class="fr"><label>발행 예정일</label><input type="date" id="fi-due"></div>
+    </div>
+    <div class="fr"><label>진행률 (%)</label><input type="number" id="fi-pct" min="0" max="100" placeholder="예: 30"></div>
+    <div class="form-actions">
+      <button class="btn btn-g" onclick="closeF('f-issue')">취소</button>
+      <button class="btn btn-p" onclick="addIssue()">등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 아이디어 추가 -->
+<div class="form-overlay" id="f-idea">
+  <div class="form-box">
+    <div class="form-title">아이디어 추가</div>
+    <div class="fr"><label>제목</label><input type="text" id="fid-title" placeholder="예: 한강 야간 산책자 인터뷰"></div>
+    <div class="fr"><label>태그 (쉼표 구분)</label><input type="text" id="fid-tags" placeholder="예: 인터뷰, 도시, Vol.2"></div>
+    <div class="form-actions">
+      <button class="btn btn-g" onclick="closeF('f-idea')">취소</button>
+      <button class="btn btn-p" onclick="addIdea()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 취재원 추가 -->
+<div class="form-overlay" id="f-source">
+  <div class="form-box">
+    <div class="form-title">취재원 추가</div>
+    <div class="fg2">
+      <div class="fr"><label>이름</label><input type="text" id="fs-name" placeholder="예: 김미래"></div>
+      <div class="fr"><label>직함/역할</label><input type="text" id="fs-role" placeholder="예: 도시 사진가"></div>
+    </div>
+    <div class="fr"><label>소개/메모</label><input type="text" id="fs-desc" placeholder="전문분야, 만난 경위 등"></div>
+    <div class="fg2">
+      <div class="fr"><label>연락처</label><input type="text" id="fs-contact" placeholder="이메일 or 전화"></div>
+      <div class="fr"><label>SNS/링크</label><input type="text" id="fs-link" placeholder="@instagram"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-g" onclick="closeF('f-source')">취소</button>
+      <button class="btn btn-p" onclick="addSource()">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 시간 기록 -->
+<div class="form-overlay" id="f-time">
+  <div class="form-box">
+    <div class="form-title">시간 기록</div>
+    <div class="fr"><label>작업 내용</label><input type="text" id="ftime-desc" placeholder="예: 2호 인트로 초고"></div>
+    <div class="fg2">
+      <div class="fr"><label>카테고리</label>
+        <select id="ftime-cat"><option>집필</option><option>편집</option><option>리서치</option><option>디자인</option><option>기획</option><option>회의</option><option>행정</option></select>
+      </div>
+      <div class="fr"><label>소요 시간 (분)</label><input type="number" id="ftime-mins" placeholder="90" min="1"></div>
+    </div>
+    <div class="fg2">
+      <div class="fr"><label>담당자</label><input type="text" id="ftime-who" placeholder="이름"></div>
+      <div class="fr"><label>날짜</label><input type="date" id="ftime-date"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-g" onclick="closeF('f-time')">취소</button>
+      <button class="btn btn-p" onclick="addTime()">기록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 예산 -->
+<div class="form-overlay" id="f-budget">
+  <div class="form-box">
+    <div class="form-title">예산 기록</div>
+    <div class="fr"><label>내용</label><input type="text" id="fb-desc" placeholder="예: Vol.2 인쇄소 계약금"></div>
+    <div class="fg2">
+      <div class="fr"><label>구분</label><select id="fb-type"><option>지출</option><option>수입</option></select></div>
+      <div class="fr"><label>카테고리</label>
+        <select id="fb-cat"><option>인쇄</option><option>원고료</option><option>사진_촬영</option><option>디자인</option><option>유통_배송</option><option>판매수익</option><option>후원_광고</option><option>기타</option></select>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fr"><label>금액 (원)</label><input type="number" id="fb-amount" placeholder="350000"></div>
+      <div class="fr"><label>연결 이슈</label><input type="text" id="fb-issue" placeholder="예: Vol.2"></div>
+    </div>
+    <div class="fr"><label>날짜</label><input type="date" id="fb-date"></div>
+    <div class="form-actions">
+      <button class="btn btn-g" onclick="closeF('f-budget')">취소</button>
+      <button class="btn btn-p" onclick="addBudget()">기록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 피드백 -->
+<div class="form-overlay" id="f-feedback">
+  <div class="form-box">
+    <div class="form-title">독자 피드백</div>
+    <div class="fr"><label>피드백 내용</label><textarea id="ffb-text" rows="3" placeholder="독자의 말을 그대로 옮겨두세요"></textarea></div>
+    <div class="fg2">
+      <div class="fr"><label>출처</label><input type="text" id="ffb-src" placeholder="예: 인스타 DM, 독자 A"></div>
+      <div class="fr"><label>채널</label>
+        <select id="ffb-ch"><option>인스타그램</option><option>이메일</option><option>트위터_X</option><option>직접</option><option>설문</option><option>기타</option></select>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fr"><label>연결 이슈</label><input type="text" id="ffb-issue" placeholder="Vol.1"></div>
+      <div class="fr"><label>별점</label>
+        <select id="ffb-stars"><option>★★★★★</option><option>★★★★</option><option>★★★</option><option>★★</option><option>★</option></select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-g" onclick="closeF('f-feedback')">취소</button>
+      <button class="btn btn-p" onclick="addFeedback()">추가</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ CONFIG ══
+const NOTION_SEARCH = 'mcp__fb9ff4c5-f66c-4a01-93fd-e9e5856c9409__notion-search';
+const NOTION_CREATE = 'mcp__fb9ff4c5-f66c-4a01-93fd-e9e5856c9409__notion-create-pages';
+
+const DS_ID = {
+  issues:   '8de258b0-5f8d-4112-91c6-8317473909fd',
+  tasks:    '86757086-30df-492e-b09a-341640b855ac',
+  ideas:    '3040a6c1-1b4b-81f5-8ad9-000b40437620',
+  sources:  'd6fdd29d-6cfe-44d0-8cab-7de27569e962',
+  budget:   '0e82295b-592c-482e-9774-267e9c218a1c',
+  feedback: '68e4b182-fbc9-43eb-87c9-274ad30bb6cb',
+  time:     '561d9145-05db-41e0-b8b9-823a2ea07b48',
+};
+const DS_URL = k => `collection://${DS_ID[k]}`;
+
+const today = new Date();
+const todayISO = today.toISOString().slice(0,10);
+const todayStr = today.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+document.getElementById('hdate').textContent = todayStr;
+document.querySelectorAll('input[type=date]').forEach(el=>{ if(!el.value) el.value=todayISO; });
+
+// Cache
+const _cache = {};
+const loaded = new Set();
+
+// ══ ROUTINE ══
+const ROUTINES = [
+  {id:1,label:'아이디어 브레인스토밍',time:'30분',done:false},
+  {id:2,label:'원고 집필 / 편집',time:'2시간',done:false},
+  {id:3,label:'리서치 · 취재 메모',time:'1시간',done:false},
+  {id:4,label:'SNS · 뉴스레터 체크',time:'20분',done:false},
+  {id:5,label:'팀 공유 · 피드백',time:'30분',done:false},
+  {id:6,label:'내일 계획 정리',time:'15분',done:false},
+];
+let routine = ROUTINES.map(r=>({...r}));
+
+function renderRoutine() {
+  document.getElementById('routine-list').innerHTML = routine.map(r=>`
+    <li class="ri">
+      <input type="checkbox" class="rcheck" id="rc${r.id}" ${r.done?'checked':''} onchange="toggleRoutine(${r.id})">
+      <label for="rc${r.id}" class="rlabel ${r.done?'done':''}">${r.label}</label>
+      <span class="rtime">${r.time}</span>
+    </li>`).join('');
+}
+function toggleRoutine(id){ const r=routine.find(x=>x.id===id); if(r)r.done=!r.done; renderRoutine(); }
+function resetRoutine(){ routine=ROUTINES.map(r=>({...r})); renderRoutine(); }
+
+// ══ TABS ══
+function sw(name, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('panel-'+name).classList.add('on');
+  btn.classList.add('on');
+  if (!loaded.has(name)) { loaded.add(name); loadPanel(name); }
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fdate(iso){ if(!iso)return ''; try{ return new Date(iso).toLocaleDateString('ko-KR',{month:'short',day:'numeric'}); }catch{return iso;} }
+function fmins(m){ const h=Math.floor(m/60),mm=m%60; return h>0?`${h}h ${mm}m`:`${mm}m`; }
+
+// ══ NOTION SEARCH ══
+async function nSearch(dsKey, query) {
+  const ckey = dsKey+'_'+query;
+  if (_cache[ckey]) return _cache[ckey];
+  try {
+    const res = await window.cowork.callMcpTool(NOTION_SEARCH, {
+      query,
+      query_type: 'internal',
+      data_source_url: DS_URL(dsKey),
+      filters: {},
+      page_size: 25,
+      max_highlight_length: 150,
+    });
+    const results = res?.results || [];
+    _cache[ckey] = results;
+    return results;
+  } catch(e) {
+    console.error('Notion search error', e);
+    return [];
+  }
+}
+
+async function nCreate(dsKey, pages) {
+  return await window.cowork.callMcpTool(NOTION_CREATE, {
+    parent: { type: 'data_source_id', data_source_id: DS_ID[dsKey] },
+    pages,
+  });
+}
+
+// ══ LOAD PANEL ══
+async function loadPanel(name) {
+  switch(name) {
+    case 'today':   return loadToday();
+    case 'issues':  return loadIssues();
+    case 'ideas':   return loadIdeas();
+    case 'sources': return loadSources();
+    case 'time':    return loadTime();
+    case 'budget':  return loadBudget();
+  }
+}
+
+// ══ TODAY ══
+async function loadToday() {
+  const [tasks, issues, timeItems] = await Promise.all([
+    nSearch('tasks','작업'),
+    nSearch('issues','스트롤'),
+    nSearch('time','작업'),
+  ]);
+
+  // Tasks
+  const todayTasks = tasks.filter(t => t.timestamp && t.timestamp.startsWith(todayISO));
+  const allTasks = todayTasks.length ? todayTasks : tasks.slice(0,10);
+  document.getElementById('tc-today').textContent = allTasks.length;
+
+  const total = allTasks.length;
+  const doneCount = 0; // can't determine from search alone
+  const pct = total ? 0 : 0;
+  document.getElementById('pct-today').textContent = total ? '—' : '0%';
+  document.getElementById('pb-today').style.width = '0%';
+  document.getElementById('pct-sub').textContent = total ? `${total}개 작업 (Notion에서 완료 체크)` : '작업을 추가하세요';
+
+  if (!allTasks.length) {
+    document.getElementById('task-list').innerHTML = `
+      <div class="empty"><div class="empty-icon">📝</div>
+      <div class="empty-title">오늘의 작업을 추가하세요</div>
+      <div class="empty-sub">＋ 추가 버튼으로 Notion에 등록됩니다</div></div>`;
+  } else {
+    document.getElementById('task-list').innerHTML = allTasks.map(t=>`
+      <div class="task-card">
+        <div style="flex:1">
+          <div class="item-title">${esc(t.title)}</div>
+          <div class="item-meta">${t.highlight ? esc(t.highlight.slice(0,80)) : ''}</div>
+        </div>
+        <a class="notion-btn" href="${esc(t.url)}" target="_blank">Notion ↗</a>
+      </div>`).join('');
+  }
+
+  // Sidebar: issues
+  const activeIssues = issues.slice(0,3);
+  document.getElementById('sidebar-issues').innerHTML = activeIssues.length
+    ? activeIssues.map(i=>`
+        <div style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+            <span style="font-weight:600;">${esc(i.title)}</span>
+            <a class="notion-btn" href="${esc(i.url)}" target="_blank">↗</a>
+          </div>
+          <div class="pb-track"><div class="pb-fill" style="width:20%"></div></div>
+        </div>`).join('')
+    : '<div style="font-size:11px;color:var(--g3);">이슈 없음 — 이슈 탭에서 추가</div>';
+
+  // Sidebar: time
+  const weekMins = timeItems.reduce((s,_)=>s+0,0);
+  document.getElementById('sidebar-time').innerHTML = timeItems.length
+    ? `<div style="font-size:20px;font-weight:800;margin-bottom:6px;">${timeItems.length}건 기록</div>
+       <div style="font-size:11px;color:var(--g3);">시간 탭에서 상세 확인</div>`
+    : '<div style="font-size:11px;color:var(--g3);">이번 주 기록 없음</div>';
+}
+
+// ══ ISSUES ══
+async function loadIssues() {
+  const items = await nSearch('issues','스트롤');
+  document.getElementById('tc-issues').textContent = items.length;
+  const el = document.getElementById('issues-list');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div>
+      <div class="empty-title">등록된 이슈가 없습니다</div>
+      <div class="empty-sub">＋ 새 이슈 버튼으로 시작하세요</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="grid2">${items.map(i=>`
+    <div class="card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--g3);text-transform:uppercase;margin-bottom:2px;">${esc(i.highlight?.match(/Vol\.\d+/)?.[0]||'ISSUE')}</div>
+          <div class="item-title">${esc(i.title)}</div>
+        </div>
+        <a class="notion-btn" href="${esc(i.url)}" target="_blank">Notion ↗</a>
+      </div>
+      ${i.highlight ? `<div style="font-size:11px;color:var(--g4);line-height:1.5;">${esc(i.highlight.slice(0,100))}</div>` : ''}
+      <div class="item-footer">
+        <span style="font-size:10px;color:var(--g3);">${fdate(i.timestamp)}</span>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ══ IDEAS ══
+async function loadIdeas() {
+  const items = await nSearch('ideas','아이디어');
+  document.getElementById('tc-ideas').textContent = items.length;
+  const el = document.getElementById('ideas-list');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">💡</div>
+      <div class="empty-title">아이디어를 쌓아보세요</div>
+      <div class="empty-sub">기사 주제, 인터뷰 대상, 시각화 아이디어 등</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="grid2">${items.map(i=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;">
+        <div class="item-title">${esc(i.title)}</div>
+        <a class="notion-btn" href="${esc(i.url)}" target="_blank">↗</a>
+      </div>
+      ${i.highlight?`<div style="font-size:11px;color:var(--g4);margin-top:5px;line-height:1.5;">${esc(i.highlight.slice(0,100))}</div>`:''}
+      <div style="font-size:10px;color:var(--g3);margin-top:6px;">${fdate(i.timestamp)}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ══ SOURCES ══
+async function loadSources() {
+  const items = await nSearch('sources','취재원');
+  document.getElementById('tc-sources').textContent = items.length;
+  const el = document.getElementById('sources-list');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">📇</div>
+      <div class="empty-title">취재원을 등록하세요</div>
+      <div class="empty-sub">인터뷰 대상, 전문가, 협력자 연락처</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div class="grid2">${items.map(s=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;">
+        <div class="item-title">${esc(s.title)}</div>
+        <a class="notion-btn" href="${esc(s.url)}" target="_blank">Notion ↗</a>
+      </div>
+      ${s.highlight?`<div style="font-size:11px;color:var(--g4);line-height:1.5;">${esc(s.highlight.slice(0,120))}</div>`:''}
+      <div style="font-size:10px;color:var(--g3);margin-top:6px;">${fdate(s.timestamp)}</div>
+    </div>`).join('')}</div>`;
+}
+
+// ══ TIME ══
+async function loadTime() {
+  const items = await nSearch('time','작업');
+  document.getElementById('tc-time').textContent = items.length;
+  const el = document.getElementById('time-list');
+  if (!items.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">⏱</div>
+      <div class="empty-title">시간 기록이 없습니다</div>
+      <div class="empty-sub">집필, 편집, 리서치 시간을 기록하세요</div></div>`;
+    return;
+  }
+  el.innerHTML = items.map(t=>`
+    <div class="card" style="display:flex;align-items:center;gap:10px;">
+      <div style="flex:1;">
+        <div class="item-title">${esc(t.title)}</div>
+        ${t.highlight?`<div class="item-meta">${esc(t.highlight.slice(0,80))}</div>`:''}
+        <div style="font-size:10px;color:var(--g3);margin-top:3px;">${fdate(t.timestamp)}</div>
+      </div>
+      <a class="notion-btn" href="${esc(t.url)}" target="_blank">Notion ↗</a>
+    </div>`).join('');
+}
+
+// ══ BUDGET ══
+async function loadBudget() {
+  const [budgets, feedbacks] = await Promise.all([
+    nSearch('budget','예산'),
+    nSearch('feedback','피드백'),
+  ]);
+
+  // Budget list
+  const bel = document.getElementById('budget-list');
+  if (!budgets.length) {
+    bel.innerHTML = `<div class="empty"><div class="empty-icon">💰</div>
+      <div class="empty-title">비용 내역이 없습니다</div>
+      <div class="empty-sub">인쇄비, 원고료, 수익 등을 기록하세요</div></div>`;
+  } else {
+    bel.innerHTML = budgets.map(b=>`
+      <div class="card" style="display:flex;align-items:center;gap:10px;">
+        <div style="flex:1;">
+          <div class="item-title">${esc(b.title)}</div>
+          ${b.highlight?`<div class="item-meta">${esc(b.highlight.slice(0,80))}</div>`:''}
+          <div style="font-size:10px;color:var(--g3);margin-top:3px;">${fdate(b.timestamp)}</div>
+        </div>
+        <a class="notion-btn" href="${esc(b.url)}" target="_blank">Notion ↗</a>
+      </div>`).join('');
+  }
+
+  // Budget summary
+  document.getElementById('budget-summary').innerHTML = `
+    <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g3);margin-bottom:10px;">요약</div>
+    <div class="brow"><span style="color:var(--g4);">총 항목</span><span class="btotal">${budgets.length}건</span></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--g3);line-height:1.6;">
+      금액 상세는 Notion에서 확인하세요<br>
+      <a href="https://www.notion.so/${DS_ID.budget.replace(/-/g,'')}" target="_blank" style="color:var(--accent);">예산 DB 열기 ↗</a>
+    </div>`;
+
+  // Feedback list
+  const fel = document.getElementById('feedback-list');
+  if (!feedbacks.length) {
+    fel.innerHTML = `<div class="empty"><div class="empty-icon">💬</div>
+      <div class="empty-title">독자 피드백을 모아두세요</div>
+      <div class="empty-sub">SNS 댓글, 이메일, 직접 인터뷰 등</div></div>`;
+  } else {
+    fel.innerHTML = `<div class="grid2">${feedbacks.map(f=>`
+      <div class="card">
+        <div style="font-size:13px;color:var(--black);line-height:1.6;margin-bottom:8px;">"${esc(f.title)}"</div>
+        ${f.highlight?`<div style="font-size:11px;color:var(--g4);margin-bottom:6px;">${esc(f.highlight.slice(0,100))}</div>`:''}
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:10px;color:var(--g3);">${fdate(f.timestamp)}</span>
+          <a class="notion-btn" href="${esc(f.url)}" target="_blank">↗</a>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+}
+
+// ══ ADD ACTIONS ══
+let saving = false;
+
+async function addTask() {
+  const text = document.getElementById('ft-text').value.trim(); if (!text || saving) return;
+  saving = true;
+  try {
+    await nCreate('tasks', [{
+      properties: {
+        '작업': text,
+        '카테고리': document.getElementById('ft-cat').value,
+        '담당자': document.getElementById('ft-who').value.trim(),
+        '완료': '__NO__',
+        'date:날짜:start': todayISO,
+        '마감시각': document.getElementById('ft-due').value.trim(),
+      }
+    }]);
+    closeF('f-task');
+    document.getElementById('ft-text').value='';
+    document.getElementById('ft-who').value='';
+    document.getElementById('ft-due').value='';
+    delete _cache['tasks_작업'];
+    loaded.delete('today');
+    document.getElementById('task-list').innerHTML='<div class="loading"></div>';
+    await loadToday();
+  } catch(e){ alert('추가 실패: '+e.message); }
+  saving = false;
+}
+
+async function addIssue() {
+  const title = document.getElementById('fi-title').value.trim(); if (!title || saving) return;
+  saving = true;
+  try {
+    const props = {
+      '이슈명': title,
+      '호수': document.getElementById('fi-num').value.trim(),
+      '테마': document.getElementById('fi-theme').value.trim(),
+      '단계': document.getElementById('fi-phase').value,
+    };
+    const pct = parseInt(document.getElementById('fi-pct').value);
+    if (!isNaN(pct)) props['진행률'] = pct / 100;
+    const due = document.getElementById('fi-due').value;
+    if (due) props['date:발행예정일:start'] = due;
+    await nCreate('issues', [{properties: props}]);
+    closeF('f-issue');
+    ['fi-num','fi-title','fi-theme','fi-pct'].forEach(id=>document.getElementById(id).value='');
+    delete _cache['issues_스트롤'];
+    loaded.delete('issues');
+    document.getElementById('issues-list').innerHTML='<div class="loading"></div>';
+    await loadIssues();
+  } catch(e){ alert('추가 실패: '+e.message); }
+  saving = false;
+}
+
+async function addIdea() {
+  const title = document.getElementById('fid-title').value.trim(); if (!title || saving) return;
+  saving = true;
+  try {
+    const tags = document.getElementById('fid-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+    await nCreate('ideas', [{properties: { 'Name': title, 'Tags': JSON.stringify(tags) }}]);
+    closeF('f-idea');
+    document.getElementById('fid-title').value='';
+    document.getElementById('fid-tags').value='';
+    delete _cache['ideas_아이디어'];
+    loaded.delete('ideas');
+    document.getElementById('ideas-list').innerHTML='<div class="loading"></div>';
+    await loadIdeas();
+  } catch(e){ alert('추가 실패: '+e.message); }
+  saving = false;
+}
+
+async function addSource() {
+  const name = document.getElementById('fs-name').value.trim(); if (!name || saving) return;
+  saving = true;
+  try {
+    await nCreate('sources', [{properties: {
+      '이름': name,
+      '직함_역할': document.getElementById('fs-role').value.trim(),
+      '소개_메모': document.getElementById('fs-desc').value.trim(),
+      '연락처': document.getElementById('fs-contact').value.trim(),
+      'SNS_링크': document.getElementById('fs-link').value.trim(),
+    }}]);
+    closeF('f-source');
+    ['fs-name','fs-role','fs-desc','fs-contact','fs-link'].forEach(id=>document.getElementById(id).value='');
+    delete _cache['sources_취재원'];
+    loaded.delete('sources');
+    document.getElementById('sources-list').innerHTML='<div class="loading"></div>';
+    await loadSources();
+  } catch(e){ alert('추가 실패: '+e.message); }
+  saving = false;
+}
+
+async function addTime() {
+  const desc = document.getElementById('ftime-desc').value.trim();
+  const mins = parseInt(document.getElementById('ftime-mins').value);
+  if (!desc || !mins || saving) return;
+  saving = true;
+  try {
+    await nCreate('time', [{properties: {
+      '작업내용': desc,
+      '카테고리': document.getElementById('ftime-cat').value,
+      '소요시간_분': mins,
+      '담당자': document.getElementById('ftime-who').value.trim(),
+      'date:날짜:start': document.getElementById('ftime-date').value || todayISO,
+    }}]);
+    closeF('f-time');
+    ['ftime-desc','ftime-mins','ftime-who'].forEach(id=>document.getElementById(id).value='');
+    delete _cache['time_작업'];
+    loaded.delete('time');
+    document.getElementById('time-list').innerHTML='<div class="loading"></div>';
+    await loadTime();
+  } catch(e){ alert('추가 실패: '+e.message); }
+  saving = false;
+}
+
+async function addBudget() {
+  const desc = document.getElementById('fb-desc').value.trim();
+  const amount = parseInt(document.getElementById('fb-amount').value);
+  if (!desc || !amount || saving) return;
+  saving = true;
+  try {
+    await nCreate('budget', [{properties: {
+      '내용': desc,
+      '구분': document.getElementById('fb-type').value,
+      '카테고리': document.getElementById('fb-cat').value,
+      '금액': amount,
+      '연결이슈': document.getElementById('fb-issue').value.trim(),
+      'date:날짜:start': document.getElementById('fb-date').value || todayISO,
+    }}]);
+    closeF('f-budget');
+    ['fb-desc','fb-amount','fb-issue'].forEach(id=>document.getElementById(id).value='');
+    delete _cache['budget_예산'];
+    loaded.delete('budget');
+    document.getElementById('budget-list').innerHTML='<div class="loading"></div>';
+    document.getElementById('feedback-list').innerHTML='<div class="loading"></div>';
+    await loadBudget();
+  } catch(e){ alert('추가 실패: '+e.message); }
+  saving = false;
+}
+
+async function addFeedback() {
+  const text = document.getElementById('ffb-text').value.trim(); if (!text || saving) return;
+  saving = true;
+  try {
+    await nCreate('feedback', [{properties: {
+      '피드백': text,
+      '출처': document.getElementById('ffb-src').value.trim(),
+      '채널': document.getElementById('ffb-ch').value,
+      '연결이슈': document.getElementById('ffb-issue').value.trim(),
+      '별점': document.getElementById('ffb-stars').value,
+      'date:날짜:start': todayISO,
+    }}]);
+    closeF('f-feedback');
+    document.getElementById('ffb-text').value='';
+    document.getElementById('ffb-src').value='';
+    document.getElementById('ffb-issue').value='';
+    delete _cache['feedback_피드백'];
+    loaded.delete('budget');
+    document.getElementById('feedback-list').innerHTML='<div class="loading"></div>';
+    await loadBudget();
+  } catch(e){ alert('추가 실패: '+e.message); }
+  saving = false;
+}
+
+// ══ MODAL HELPERS ══
+function openF(id){ document.getElementById(id).classList.add('open'); }
+function closeF(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.form-overlay').forEach(el=>{
+  el.addEventListener('click', e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+
+// ══ INIT ══
+renderRoutine();
+loaded.add('today');
+loadToday();
+</script>
+</body>
+</html>
